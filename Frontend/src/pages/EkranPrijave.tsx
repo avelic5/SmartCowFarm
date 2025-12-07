@@ -36,7 +36,7 @@ export function EkranPrijave() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-blue-600 rounded-2xl mb-4">
               <Milk className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">OIS – Pametna Farma Krava</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Pametna Farma Krava</h1>
             <p className="text-sm text-gray-600">AI sistem za upravljanje farmom</p>
           </div>
 
@@ -102,7 +102,7 @@ export function EkranPrijave() {
           </form>
 
           <div className="mt-6 text-center text-sm text-gray-500">
-            <p>Pametno farmanje uz pomoć AI tehnologije</p>
+            <p>Pametno održavanje farme uz pomoć AI tehnologije</p>
           </div>
         </div>
 
