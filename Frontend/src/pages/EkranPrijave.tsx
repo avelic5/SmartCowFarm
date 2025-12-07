@@ -107,7 +107,7 @@ export function EkranPrijave() {
         </div>
 
         <div className="text-center mt-6 text-sm text-gray-600">
-          <p>© 2025 OIS Pametna Farma Krava. Sva prava zadržana.</p>
+          <p>© 2025 SmartCowFarm. Sva prava zadržana.</p>
         </div>
       </div>
     </div>

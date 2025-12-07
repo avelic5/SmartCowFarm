@@ -19,6 +19,8 @@ const podaciZdravlja = [
   { naziv: 'Na liječenju', vrijednost: 3, boja: '#ef4444' },
 ];
 
+const ukupnoZdravlje = podaciZdravlja.reduce((sum, stavka) => sum + stavka.vrijednost, 0);
+
 const zoneStaje = [
   { zona: 'A1', temp: 18.5, vlažnost: 65, status: 'dobro' },
   { zona: 'A2', temp: 19.2, vlažnost: 68, status: 'dobro' },
@@ -155,13 +157,20 @@ export function KontrolnaTabla() {
                 innerRadius={60}
                 outerRadius={90}
                 paddingAngle={5}
+                nameKey="naziv"
                 dataKey="vrijednost"
               >
                 {podaciZdravlja.map((stavka, index) => (
                   <Cell key={`cell-${index}`} fill={stavka.boja} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip
+                formatter={(value, name) => {
+                  const broj = Number(value);
+                  const procenat = ukupnoZdravlje > 0 ? Math.round((broj / ukupnoZdravlje) * 100) : 0;
+                  return [`${broj} (${procenat}%)`, name as string];
+                }}
+              />
             </PieChart>
           </ResponsiveContainer>
           <div className="mt-4 space-y-2">

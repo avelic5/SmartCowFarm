@@ -132,7 +132,7 @@ export function NavigacijskaSideBar() {
       {/* Footer */}
       <div className="p-4 border-t border-gray-200">
         <p className="text-xs text-gray-500 text-center">
-          © 2025 OIS Pametna Farma
+          © 2025 SmartCowFarm
         </p>
       </div>
     </aside>
