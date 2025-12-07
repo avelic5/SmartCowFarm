@@ -13,14 +13,6 @@ const podaciProdukcije = [
   { datum: '7 Dec', litri: 3200 },
 ];
 
-const podaciZdravlja = [
-  { naziv: 'Zdrave', vrijednost: 112, boja: '#10b981' },
-  { naziv: 'Manji problemi', vrijednost: 8, boja: '#f59e0b' },
-  { naziv: 'Na liječenju', vrijednost: 3, boja: '#ef4444' },
-];
-
-const ukupnoZdravlje = podaciZdravlja.reduce((sum, stavka) => sum + stavka.vrijednost, 0);
-
 const zoneStaje = [
   { zona: 'A1', temp: 18.5, vlažnost: 65, status: 'dobro' },
   { zona: 'A2', temp: 19.2, vlažnost: 68, status: 'dobro' },
@@ -38,6 +30,14 @@ export function KontrolnaTabla() {
   const kraveNaMuži = krave.filter(k => k.status !== 'lijecenje').length;
   const aktivnaUpozorenja = upozorenja.filter(u => !u.pročitano).length;
   const kritičnaUpozorenja = upozorenja.filter(u => u.tip === 'kritično' && !u.pročitano).length;
+
+  const podaciZdravlja = [
+    { naziv: 'Zdrave', vrijednost: krave.filter(k => k.status === 'zdrava').length, boja: '#10b981' },
+    { naziv: 'Manji problemi', vrijednost: krave.filter(k => k.status === 'praćenje').length, boja: '#f59e0b' },
+    { naziv: 'Na liječenju', vrijednost: krave.filter(k => k.status === 'lijecenje').length, boja: '#ef4444' },
+  ];
+
+  const ukupnoZdravlje = podaciZdravlja.reduce((sum, stavka) => sum + stavka.vrijednost, 0);
 
   return (
     <div className="p-8 space-y-6">
