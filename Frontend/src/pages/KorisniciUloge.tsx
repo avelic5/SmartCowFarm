@@ -1,4 +1,5 @@
-import { UserPlus, ShieldCheck, Mail, CheckCircle2, XCircle, Search } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { UserPlus, ShieldCheck, Mail, CheckCircle2, XCircle, Search, Check, Minus } from 'lucide-react';
 
 const users = [
   { ime: 'Amar Kovač', email: 'amar@farm.ba', uloga: 'administrator', status: 'aktivan', kreiran: '12.03.2024' },
@@ -15,6 +16,15 @@ const permissions: Record<string, string[]> = {
 };
 
 export function KorisniciUloge() {
+  const [showMatrix, setShowMatrix] = useState(false);
+
+  const displayRole = (role: string) => role.charAt(0).toUpperCase() + role.slice(1);
+
+  const matrix = useMemo(() => {
+    const allPerms = Array.from(new Set(Object.values(permissions).flat()));
+    return { allPerms };
+  }, []);
+
   return (
     <div className="p-6 md:p-8 space-y-8">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -23,7 +33,10 @@ export function KorisniciUloge() {
           <p className="text-gray-600 mt-1">Dodjela prava, statusi i audit trag</p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 hover:bg-gray-50">
+          <button
+            onClick={() => setShowMatrix(!showMatrix)}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 hover:bg-gray-50"
+          >
             <ShieldCheck className="w-4 h-4" /> Role matrix
           </button>
           <button className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-green-600 to-blue-600 px-4 py-2 text-white shadow-md hover:from-green-700 hover:to-blue-700">
@@ -38,9 +51,12 @@ export function KorisniciUloge() {
             <CheckCircle2 className="w-4 h-4 text-green-600" /> 3 aktivna
             <XCircle className="w-4 h-4 text-amber-500" /> 1 pauziran
           </div>
-          <div className="relative w-full md:w-72">
+          <div className="relative w-full md:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input className="w-full rounded-lg border border-gray-300 pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Pretraži korisnike" />
+            <input
+              className="w-full rounded-lg border border-gray-300 pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="Pretraži korisnike, uloge ili email adrese"
+            />
           </div>
         </div>
 
@@ -61,7 +77,7 @@ export function KorisniciUloge() {
                 <tr key={u.email} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-gray-900">{u.ime}</td>
                   <td className="px-4 py-3 text-gray-700 inline-flex items-center gap-2"><Mail className="w-4 h-4 text-gray-400" /> {u.email}</td>
-                  <td className="px-4 py-3 text-gray-900 capitalize">{u.uloga}</td>
+                  <td className="px-4 py-3 text-gray-900">{displayRole(u.uloga)}</td>
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-3 py-1 text-xs font-medium ${u.status === 'aktivan' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
                       {u.status}
@@ -81,12 +97,48 @@ export function KorisniciUloge() {
         </div>
       </div>
 
+      {showMatrix && (
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Role matrix</h3>
+            <p className="text-sm text-gray-500">Pregled dozvola po ulozi</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 text-gray-600">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium">Dozvola</th>
+                  {Object.keys(permissions).map((role) => (
+                    <th key={role} className="px-4 py-3 text-center font-medium">{displayRole(role)}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {matrix.allPerms.map((perm) => (
+                  <tr key={perm} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-gray-900">{perm}</td>
+                    {Object.entries(permissions).map(([role, perms]) => (
+                      <td key={role} className="px-4 py-3 text-center">
+                        {perms.includes(perm) ? <Check className="w-4 h-4 inline text-green-600" /> : <Minus className="w-4 h-4 inline text-gray-300" />}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Uloge i dozvole</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Uloge i dozvole</h3>
+          <p className="text-sm text-gray-500">Sažetak po ulozi</p>
+        </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {Object.entries(permissions).map(([role, perms]) => (
-            <div key={role} className="rounded-lg border border-gray-200 p-4">
-              <p className="font-semibold text-gray-900 capitalize">{role}</p>
+            <div key={role} className="rounded-lg border border-gray-200 p-4 bg-gray-50/70">
+              <p className="font-semibold text-gray-900">{displayRole(role)}</p>
               <ul className="mt-2 space-y-1 text-sm text-gray-700">
                 {perms.map((p) => (
                   <li key={p} className="flex items-start gap-2">
