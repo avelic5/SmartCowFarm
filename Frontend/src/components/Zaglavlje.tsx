@@ -26,10 +26,10 @@ export function Zaglavlje() {
         {/* Korisničke akcije */}
         <div className="flex items-center gap-4">
           {/* Notifikacije */}
-          <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
+          <button className="relative inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
             <Bell className="w-6 h-6 text-gray-600" />
             {nepročitanaUpozorenja > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
+              <span className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[11px] font-semibold leading-none text-white shadow-sm ring-2 ring-white">
                 {nepročitanaUpozorenja}
               </span>
             )}
