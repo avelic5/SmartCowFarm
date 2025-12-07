@@ -67,7 +67,7 @@ export function SenzoriOkolina() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 mt-4 md:mt-6">
         <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Zone u staji</h3>
