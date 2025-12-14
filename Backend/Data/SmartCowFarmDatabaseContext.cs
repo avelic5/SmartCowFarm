@@ -11,7 +11,7 @@ public class SmartCowFarmDatabaseContext : DbContext
     public DbSet<Korisnik> Korisnici { get; set; }
     public DbSet<Krava> Krave { get; set; }
     public DbSet<Muza> Muze { get; set; }
-    public DbSet<OcitanjeSenzora> OcitavanjaSenzora { get; set; }
+    public DbSet<OcitanjeSenzora> OcitanjaSenzora { get; set; }
     public DbSet<Senzor> Senzori { get; set; }
     public DbSet<Terapija> Terapije { get; set; }
     public DbSet<TerapijaAplikacije> TerapijeAplikacije { get; set; }
@@ -124,6 +124,9 @@ public class SmartCowFarmDatabaseContext : DbContext
                 .HasConversion<string>();
 
             entity.Property(e => e.Odjel)
+                .HasConversion<string>();
+
+            entity.Property(e => e.StatusNaloga)
                 .HasConversion<string>();
         });
 

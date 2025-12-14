@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Backend.Migrations
 {
     [DbContext(typeof(SmartCowFarmDatabaseContext))]
-    [Migration("20251214140533_InicijalnaMigracija")]
+    [Migration("20251214142832_InicijalnaMigracija")]
     partial class InicijalnaMigracija
     {
         /// <inheritdoc />
@@ -68,8 +68,9 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("StatusNaloga")
-                        .HasColumnType("integer");
+                    b.Property<string>("StatusNaloga")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Telefon")
                         .IsRequired()
@@ -226,7 +227,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("IdSenzora");
 
-                    b.ToTable("OcitavanjaSenzora");
+                    b.ToTable("OcitanjaSenzora");
                 });
 
             modelBuilder.Entity("Backend.Models.Senzor", b =>

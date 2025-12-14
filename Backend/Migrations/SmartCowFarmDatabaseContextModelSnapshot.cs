@@ -65,8 +65,9 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("StatusNaloga")
-                        .HasColumnType("integer");
+                    b.Property<string>("StatusNaloga")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Telefon")
                         .IsRequired()
@@ -223,7 +224,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("IdSenzora");
 
-                    b.ToTable("OcitavanjaSenzora");
+                    b.ToTable("OcitanjaSenzora");
                 });
 
             modelBuilder.Entity("Backend.Models.Senzor", b =>

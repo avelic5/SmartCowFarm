@@ -27,7 +27,7 @@ namespace Backend.Migrations
                     Email = table.Column<string>(type: "text", nullable: false),
                     DatumZaposlenja = table.Column<DateOnly>(type: "date", nullable: false),
                     Odjel = table.Column<string>(type: "text", nullable: false),
-                    StatusNaloga = table.Column<int>(type: "integer", nullable: false),
+                    StatusNaloga = table.Column<string>(type: "text", nullable: false),
                     Napomene = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
@@ -198,7 +198,7 @@ namespace Backend.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "OcitavanjaSenzora",
+                name: "OcitanjaSenzora",
                 columns: table => new
                 {
                     IdOcitanja = table.Column<int>(type: "integer", nullable: false)
@@ -212,9 +212,9 @@ namespace Backend.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_OcitavanjaSenzora", x => x.IdOcitanja);
+                    table.PrimaryKey("PK_OcitanjaSenzora", x => x.IdOcitanja);
                     table.ForeignKey(
-                        name: "FK_OcitavanjaSenzora_Senzori_IdSenzora",
+                        name: "FK_OcitanjaSenzora_Senzori_IdSenzora",
                         column: x => x.IdSenzora,
                         principalTable: "Senzori",
                         principalColumn: "IdSenzora",
@@ -331,8 +331,8 @@ namespace Backend.Migrations
                 column: "IdKrave");
 
             migrationBuilder.CreateIndex(
-                name: "IX_OcitavanjaSenzora_IdSenzora",
-                table: "OcitavanjaSenzora",
+                name: "IX_OcitanjaSenzora_IdSenzora",
+                table: "OcitanjaSenzora",
                 column: "IdSenzora");
 
             migrationBuilder.CreateIndex(
@@ -398,7 +398,7 @@ namespace Backend.Migrations
                 name: "Muze");
 
             migrationBuilder.DropTable(
-                name: "OcitavanjaSenzora");
+                name: "OcitanjaSenzora");
 
             migrationBuilder.DropTable(
                 name: "TerapijeAplikacije");

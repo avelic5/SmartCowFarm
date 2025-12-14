@@ -4,6 +4,28 @@ GET {{Backend_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
-
 GET {{Backend_HostAddress}}/api/korisnik
 Accept: application/json
+
+###
+GET {{Backend_HostAddress}}/api/korisnik/
+Accept: application/json
+
+###
+POST {{Backend_HostAddress}}/api/korisnik
+Content-Type: application/json
+
+{
+  "ime": "Mirza",
+  "prezime": "Hodzic",
+  "radnoMjesto": "Veterinar",
+  "korisnickoIme": "mirza.h",
+  "hashLozinke": "OVDJE_HASH",
+  "telefon": "+38761123456",
+  "email": "mirza@example.com",
+  "datumZaposlenja": "2025-12-14",
+  "odjel": "Farmer",         
+  "statusNaloga": "Aktivan", 
+  "napomene": "Napomena"
+}
+
