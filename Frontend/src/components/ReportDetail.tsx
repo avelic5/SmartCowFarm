@@ -91,7 +91,7 @@ export function ReportDetail({ reportType, onNavigate }: ReportDetailProps) {
           <div className="p-8 border-b border-gray-200">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-blue-600 rounded-xl flex items-center justify-center">
+                <div className="w-16 h-16 bg-green-500 rounded-xl flex items-center justify-center">
                   <span className="text-white">OIS</span>
                 </div>
                 <div>

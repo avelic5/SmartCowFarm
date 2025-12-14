@@ -28,7 +28,7 @@ export function SenzoriOkolina() {
     <div className="p-6 md:p-8 space-y-8">
       <div>
         <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Senzori i okolina</h1>
-        <p className={`mt-1 ${isDarkMode ? 'text-slate-200' : 'text-gray-600'}`}>Uslovi u staji, upozorenja i vanjski meteo podaci</p>
+        <p className={`mt-1 mb-4 ${isDarkMode ? 'text-slate-200' : 'text-gray-600'}`}>Uslovi u staji, upozorenja i vanjski meteo podaci</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

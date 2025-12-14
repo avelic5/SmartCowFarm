@@ -71,14 +71,14 @@ export function Izvjestaji() {
           <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Izvještaji</h1>
           <p className={`mt-1 ${isDarkMode ? 'text-slate-200' : 'text-gray-600'}`}>Pregled, izvoz i print ključnih metrika farme</p>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 mb-4">
           <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50">
             <Share2 className="w-4 h-4" /> Podijeli
           </button>
           <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50">
             <Download className="w-4 h-4" /> Export PDF
           </button>
-          <button className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-green-600 to-blue-600 px-4 py-2 text-white shadow-md hover:from-green-700 hover:to-blue-700">
+          <button className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-white shadow-md hover:bg-green-500">
             <Printer className="w-4 h-4" /> Print verzija
           </button>
         </div>
@@ -243,7 +243,7 @@ export function Izvjestaji() {
       </div>
 
       {/* Secondary charts */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 mt-4">
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Top krave po prosjeku</h3>
@@ -287,7 +287,7 @@ export function Izvjestaji() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm mt-4 mb-4">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Posljednji generisani izvještaji</h3>

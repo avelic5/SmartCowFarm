@@ -32,7 +32,7 @@ export function DetaljiKrave() {
           <p className="text-gray-600 mb-6">Krava sa ID-em {id} ne postoji u sistemu.</p>
           <button
             onClick={() => navigate('/krave')}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-500 transition-colors"
           >
             Nazad na listu
           </button>
@@ -58,7 +58,7 @@ export function DetaljiKrave() {
         </div>
         <button
           onClick={() => navigate(`/krave/${krava.id}/uredi`)}
-          className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+          className="flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-500 transition-colors"
         >
           <Edit className="w-5 h-5" />
           Uredi

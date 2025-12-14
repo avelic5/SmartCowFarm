@@ -54,7 +54,7 @@ export function EkranPrijave() {
         >
           {/* Logo i naslov */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-blue-600 rounded-2xl mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500 rounded-2xl mb-4">
               <Milk className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl font-bold mb-2" style={{ color: labelText }}>Pametna Farma Krava</h1>
@@ -143,7 +143,7 @@ export function EkranPrijave() {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white py-3 rounded-lg hover:from-green-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg font-medium"
+              className="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-500 transition-all shadow-md hover:shadow-lg font-medium"
             >
               Prijavi se
             </button>

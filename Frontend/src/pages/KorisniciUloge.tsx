@@ -27,7 +27,7 @@ export function KorisniciUloge() {
 
   return (
     <div className="p-6 md:p-8 space-y-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Korisnici i uloge</h1>
           <p className="text-gray-600 mt-1">Dodjela prava, statusi i audit trag</p>
@@ -39,13 +39,13 @@ export function KorisniciUloge() {
           >
             <ShieldCheck className="w-4 h-4" /> Role matrix
           </button>
-          <button className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-green-600 to-blue-600 px-5 py-2.5 text-white shadow-md hover:from-green-700 hover:to-blue-700">
+          <button className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-white shadow-md hover:bg-green-500">
             <UserPlus className="w-4 h-4" /> Novi korisnik
           </button>
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mb-4">
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-3 text-sm text-gray-700">
             <span className="inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 font-medium text-green-700">

@@ -41,7 +41,7 @@ export function Zaglavlje() {
               <p className="text-sm font-medium text-gray-900">{korisnik?.ime || 'Korisnik'}</p>
               <p className="text-xs text-gray-500 capitalize">{korisnik?.uloga || 'Administrator'}</p>
             </div>
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
               <User className="w-5 h-5 text-white" />
             </div>
           </div>

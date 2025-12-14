@@ -66,7 +66,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         {/* Logo */}
         <div className="h-16 border-b border-gray-200 flex items-center px-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
               <Milk className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -90,7 +90,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                 onClick={() => onNavigate(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                   isActive
-                    ? 'bg-gradient-to-r from-green-500 to-blue-600 text-white shadow-md'
+                    ? 'bg-green-500 text-white shadow-md'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
@@ -143,7 +143,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                 <div className="text-gray-900">John Doe</div>
                 <div className="text-green-600">Admin</div>
               </div>
-              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center text-white">
+              <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white">
                 JD
               </div>
             </div>

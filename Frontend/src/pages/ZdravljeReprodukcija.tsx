@@ -39,7 +39,7 @@ export function ZdravljeReprodukcija() {
     <div className="p-6 md:p-8 space-y-8">
       <div>
         <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Zdravlje i reprodukcija</h1>
-        <p className={`mt-1 ${isDarkMode ? 'text-slate-200' : 'text-gray-600'}`}>Praćenje tretmana, reproduktivnih ciklusa i rizičnih slučajeva</p>
+        <p className={`mt-1 mb-4 ${isDarkMode ? 'text-slate-200' : 'text-gray-600'}`}>Praćenje tretmana, reproduktivnih ciklusa i rizičnih slučajeva</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mb-6">
@@ -49,7 +49,7 @@ export function ZdravljeReprodukcija() {
             className="rounded-xl border p-5 shadow-lg"
             style={{ backgroundColor: cardBg, borderColor: cardBorder, color: cardText }}
           >
-            <div className="flex items-center gap-3 pl-4">
+            <div className="flex items-center gap-3 p-4">
               <div
                 className="h-10 w-10 rounded-lg flex items-center justify-center border text-white"
                 style={{
@@ -115,7 +115,7 @@ export function ZdravljeReprodukcija() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mt-4">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Rizici i praćenje</h3>
