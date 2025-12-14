@@ -1,3 +1,5 @@
+using Backend.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend;
 
@@ -12,6 +14,13 @@ public class Program
         builder.Services.AddControllers();
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
+
+        //baza
+        builder.Services.AddDbContext<SmartCowFarmDatabaseContext>(
+        options => options.UseNpgsql(
+            builder.Configuration.GetConnectionString("DefaultConnection")
+    )
+);
 
         var app = builder.Build();
 
