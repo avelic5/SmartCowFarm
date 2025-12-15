@@ -48,5 +48,35 @@ namespace Backend.Controllers
 
             return CreatedAtAction(nameof(DajKorisnika), new {id = noviKorisnik.IdKorisnika}, noviKorisnik);
         }
+
+        //HTTP PUT PO IDU I IZMJENI KORISNIKA
+        [HttpPut("{id}")]
+        public async Task<ActionResult> UpdateKorisnika(int id, [FromBody] Korisnik noviKorisnik)
+        {
+            if(noviKorisnik==null)return BadRequest();
+            var trazeniKorisnik = await baza.Korisnici.FindAsync(id);
+            
+            if(trazeniKorisnik==null) return NotFound();
+
+            //kraci nacin za mijenjane vrijednosti u varijablama
+            baza.Entry(trazeniKorisnik).CurrentValues.SetValues(noviKorisnik); 
+
+            await baza.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        //HTTP DELETE KORISNIKA PO ID
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> ObrisiKorisnika(int id)
+        {
+            var trazeniKorisnik = await baza.Korisnici.FindAsync(id);
+            if(trazeniKorisnik==null)return NotFound();
+
+            baza.Korisnici.Remove(trazeniKorisnik);
+            await baza.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }
