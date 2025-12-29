@@ -17,6 +17,23 @@ import { Izvjestaji } from './pages/Izvjestaji';
 import { KorisniciUloge } from './pages/KorisniciUloge';
 import { Postavke } from './pages/Postavke';
 
+// Legacy navigation type used by some older components in src/components/.
+export type Page =
+  | 'dashboard'
+  | 'cows'
+  | 'cow-detail'
+  | 'cow-form'
+  | 'milk-production'
+  | 'health-reproduction'
+  | 'sensors-environment'
+  | 'tasks'
+  | 'alerts'
+  | 'reports'
+  | 'report-detail'
+  | 'report-print'
+  | 'users-roles'
+  | 'settings';
+
 export default function App() {
   const { prijavljenKorisnik } = useAuth();
 
