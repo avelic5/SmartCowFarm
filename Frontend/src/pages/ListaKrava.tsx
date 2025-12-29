@@ -29,16 +29,16 @@ export function ListaKrava() {
   };
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 md:p-8 space-y-6">
       {/* Zaglavlje */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Krave</h1>
           <p className="text-gray-600 mt-1">Upravljanje stadom i evidencija krava</p>
         </div>
         <button
           onClick={() => navigate('/krave/nova')}
-          className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 md:px-6 md:py-3 rounded-lg hover:bg-green-700 transition-colors shadow-sm"
         >
           <Plus className="w-5 h-5" />
           Dodaj kravu

@@ -63,14 +63,27 @@ const navigacijskeStavke = [
   },
 ];
 
-export function NavigacijskaSideBar() {
+interface NavigacijskaSideBarProps {
+  mobileOpen?: boolean;
+  onRequestCloseMobile?: () => void;
+}
+
+export function NavigacijskaSideBar({
+  mobileOpen = false,
+  onRequestCloseMobile,
+}: NavigacijskaSideBarProps) {
   const location = useLocation();
   const { odjava } = useAuth();
 
+  const mobileVisibilityClass = mobileOpen ? 'flex' : 'hidden';
+
   return (
-	<aside className="sticky top-0 z-30 flex h-screen w-64 shrink-0 flex-col border-r border-gray-200 bg-white shadow-sm">
+	<aside
+		id="mobile-nav"
+		className={`static order-2 z-30 ${mobileVisibilityClass} w-full shrink-0 flex-col border-b border-gray-200 bg-white shadow-sm md:order-none md:flex md:sticky md:top-0 md:h-screen md:w-64 md:border-b-0 md:border-r`}
+	>
       {/* Logo */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="border-b border-gray-200 p-4 md:p-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-xl flex items-center justify-center">
             <Milk className="w-6 h-6 text-white" />
@@ -83,8 +96,8 @@ export function NavigacijskaSideBar() {
       </div>
 
       {/* Navigacija */}
-      <nav className="flex-1 p-4 overflow-y-auto">
-        <ul className="space-y-1">
+    <nav className="flex-1 overflow-y-auto p-3 md:p-4">
+    <ul className="space-y-1">
           {navigacijskeStavke.map((stavka) => {
             const jeAktivna = location.pathname === stavka.putanja;
             const Ikona = stavka.ikona;
@@ -93,8 +106,9 @@ export function NavigacijskaSideBar() {
               <li key={stavka.putanja}>
                 <Link
                   to={stavka.putanja}
+              onClick={onRequestCloseMobile}
                   className={`
-                    flex items-center gap-3 px-4 py-3 rounded-lg transition-all
+                flex items-center gap-3 rounded-lg px-4 py-3 transition-all
                     ${jeAktivna 
                       ? 'bg-green-50 text-green-700 font-medium' 
                       : 'text-gray-700 hover:bg-gray-50'
@@ -102,7 +116,7 @@ export function NavigacijskaSideBar() {
                   `}
                 >
                   <Ikona className={`w-5 h-5 ${jeAktivna ? 'text-green-600' : 'text-gray-500'}`} />
-                  <span className="text-sm">{stavka.tekst}</span>
+              <span className="text-sm">{stavka.tekst}</span>
                 </Link>
               </li>
             );
@@ -110,18 +124,22 @@ export function NavigacijskaSideBar() {
         </ul>
 
         {/* Postavke i odjava */}
-        <div className="mt-6 pt-6 border-t border-gray-200 space-y-1">
+		<div className="mt-6 space-y-1 border-t border-gray-200 pt-6">
           <Link
             to="/postavke"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-all"
+			onClick={onRequestCloseMobile}
+			className="flex items-center gap-3 rounded-lg px-4 py-3 text-gray-700 transition-all hover:bg-gray-50"
           >
             <Settings className="w-5 h-5 text-gray-500" />
             <span className="text-sm">Postavke</span>
           </Link>
-          
+
           <button
-            onClick={odjava}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all"
+            onClick={() => {
+            odjava();
+            onRequestCloseMobile?.();
+            }}
+			className="w-full flex items-center gap-3 rounded-lg px-4 py-3 text-gray-700 transition-all hover:bg-red-50 hover:text-red-600"
           >
             <LogOut className="w-5 h-5" />
             <span className="text-sm">Odjavi se</span>
@@ -130,7 +148,7 @@ export function NavigacijskaSideBar() {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="hidden border-t border-gray-200 p-4 md:block">
         <p className="text-xs text-gray-500 text-center">
           © 2025 SmartCowFarm
         </p>

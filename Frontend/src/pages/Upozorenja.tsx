@@ -16,7 +16,7 @@ export function Upozorenja() {
   };
 
   return (
-    <div className="p-8 space-y-8" style={{ color: cardText }}>
+    <div className="p-4 md:p-8 space-y-8" style={{ color: cardText }}>
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Upozorenja</h1>
         <div className="flex items-center gap-3 flex-wrap">
