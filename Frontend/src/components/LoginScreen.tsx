@@ -15,10 +15,10 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-blue-50 to-green-50 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-green-50 relative overflow-hidden">
       {/* Background illustration */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-green-300 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 left-20 w-64 h-64 bg-green-500 rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-300 rounded-full blur-3xl"></div>
       </div>
 
@@ -27,7 +27,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
         <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
           {/* Logo and title */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-blue-600 rounded-2xl mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500 rounded-2xl mb-4">
               <Milk className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-gray-900 mb-2">OIS – Smart Cow Farm</h1>
@@ -87,7 +87,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white py-3 rounded-lg hover:from-green-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg"
+              className="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-500 transition-all shadow-md hover:shadow-lg"
             >
               Sign in
             </button>

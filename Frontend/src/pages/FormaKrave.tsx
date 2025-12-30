@@ -51,7 +51,7 @@ export function FormaKrave() {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto">
       <div className="mb-8">
         <button
           onClick={() => navigate('/krave')}
@@ -241,3 +241,4 @@ export function FormaKrave() {
     </div>
   );
 }
+

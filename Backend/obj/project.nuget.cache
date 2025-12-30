@@ -2,7 +2,7 @@
   "version": 2,
   "dgSpecHash": "xprrjmxSNZs=",
   "success": true,
-  "projectFilePath": "/home/kingpin/Desktop/SmartCowFarm/Backend/Backend.csproj",
+  "projectFilePath": "/home/avelic5/Desktop/Projekti/SmartCowFarm/Backend/Backend.csproj",
   "expectedPackageFiles": [
     "/home/kingpin/.nuget/packages/azure.core/1.47.1/azure.core.1.47.1.nupkg.sha512",
     "/home/kingpin/.nuget/packages/azure.identity/1.14.2/azure.identity.1.14.2.nupkg.sha512",
@@ -81,12 +81,21 @@
       "targetGraphs": []
     },
     {
-      "code": "NU1510",
+      "code": "Undefined",
       "level": "Warning",
-      "message": "PackageReference Microsoft.Extensions.Configuration.Json will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.",
+      "message": "Problem reading the cache file /home/kingpin/Desktop/SmartCowFarm/Backend/obj/project.nuget.cache : '<' is an invalid start of a property name. Expected a '\"'. Path: $ | LineNumber: 2 | BytePositionInLine: 0.",
       "projectPath": "/home/kingpin/Desktop/SmartCowFarm/Backend/Backend.csproj",
       "warningLevel": 1,
       "filePath": "/home/kingpin/Desktop/SmartCowFarm/Backend/Backend.csproj",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1510",
+      "level": "Warning",
+      "message": "PackageReference Microsoft.Extensions.Configuration.Json will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.",
+      "projectPath": "/home/avelic5/Desktop/Projekti/SmartCowFarm/Backend/Backend.csproj",
+      "warningLevel": 1,
+      "filePath": "/home/avelic5/Desktop/Projekti/SmartCowFarm/Backend/Backend.csproj",
       "libraryId": "Microsoft.Extensions.Configuration.Json",
       "targetGraphs": [
         "net10.0"

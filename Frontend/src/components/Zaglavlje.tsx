@@ -1,8 +1,13 @@
-import { Bell, Search, User } from 'lucide-react';
+import { Bell, Menu, Search, User, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 
-export function Zaglavlje() {
+interface ZaglavljeProps {
+  isMobileNavOpen?: boolean;
+  onToggleMobileNav?: () => void;
+}
+
+export function Zaglavlje({ isMobileNavOpen = false, onToggleMobileNav }: ZaglavljeProps) {
   const { korisnik } = useAuth();
   const { upozorenja } = useData();
   
@@ -10,21 +15,38 @@ export function Zaglavlje() {
 
   return (
     <header className="sticky top-0 bg-white border-b border-gray-200 z-40 shadow-sm">
-      <div className="flex items-center justify-between px-8 py-4">
-        {/* Pretraga */}
-        <div className="flex-1 max-w-xl">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Pretražite krave, izvještaje, zadatke..."
-              className="w-full pl-11 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-            />
+      <div className="flex flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between md:px-8 md:py-4">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-gray-100 transition-colors md:hidden"
+            aria-label={isMobileNavOpen ? 'Zatvori navigaciju' : 'Otvori navigaciju'}
+            aria-expanded={isMobileNavOpen}
+            aria-controls="mobile-nav"
+            onClick={onToggleMobileNav}
+          >
+            {isMobileNavOpen ? (
+              <X className="h-6 w-6 text-gray-700" />
+            ) : (
+              <Menu className="h-6 w-6 text-gray-700" />
+            )}
+          </button>
+
+          {/* Pretraga */}
+          <div className="w-full md:flex-1 md:max-w-xl">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Pretražite krave, izvještaje, zadatke..."
+                className="w-full pl-11 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+              />
+            </div>
           </div>
         </div>
 
         {/* Korisničke akcije */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between gap-4 md:justify-end">
           {/* Notifikacije */}
           <button className="relative inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
             <Bell className="w-6 h-6 text-gray-600" />
@@ -37,7 +59,7 @@ export function Zaglavlje() {
 
           {/* Korisnički profil */}
           <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
-            <div className="text-right">
+            <div className="hidden text-right sm:block">
               <p className="text-sm font-medium text-gray-900">{korisnik?.ime || 'Korisnik'}</p>
               <p className="text-xs text-gray-500 capitalize">{korisnik?.uloga || 'Administrator'}</p>
             </div>
@@ -50,3 +72,4 @@ export function Zaglavlje() {
     </header>
   );
 }
+

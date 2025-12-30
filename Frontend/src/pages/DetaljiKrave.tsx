@@ -25,14 +25,14 @@ export function DetaljiKrave() {
 
   if (!krava) {
     return (
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Krava nije pronađena</h2>
           <p className="text-gray-600 mb-6">Krava sa ID-em {id} ne postoji u sistemu.</p>
           <button
             onClick={() => navigate('/krave')}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-500 transition-colors"
           >
             Nazad na listu
           </button>
@@ -42,9 +42,9 @@ export function DetaljiKrave() {
   }
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 md:p-8 space-y-6">
       {/* Zaglavlje */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <button
             onClick={() => navigate('/krave')}
@@ -58,7 +58,7 @@ export function DetaljiKrave() {
         </div>
         <button
           onClick={() => navigate(`/krave/${krava.id}/uredi`)}
-          className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+          className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 md:px-6 md:py-3 rounded-lg hover:bg-green-500 transition-colors"
         >
           <Edit className="w-5 h-5" />
           Uredi
@@ -70,7 +70,7 @@ export function DetaljiKrave() {
         {/* Status i osnovni podaci */}
         <div className="lg:col-span-2 bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Osnovne informacije</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="p-4 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-600 mb-1">Pasmina</p>
               <p className="text-lg font-semibold text-gray-900">{krava.pasmina}</p>

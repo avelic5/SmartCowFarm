@@ -42,7 +42,7 @@ export function KontrolnaTabla() {
   const ukupnoZdravlje = podaciZdravlja.reduce((sum, stavka) => sum + stavka.vrijednost, 0);
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 md:p-8 space-y-6">
       {/* KPI Kartice */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
