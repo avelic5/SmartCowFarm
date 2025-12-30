@@ -72,6 +72,15 @@
   ],
   "logs": [
     {
+      "code": "Undefined",
+      "level": "Warning",
+      "message": "Problem reading the cache file /home/kingpin/Desktop/SmartCowFarm/Backend/obj/project.nuget.cache : '<' is an invalid start of a property name. Expected a '\"'. Path: $ | LineNumber: 2 | BytePositionInLine: 0.",
+      "projectPath": "/home/kingpin/Desktop/SmartCowFarm/Backend/Backend.csproj",
+      "warningLevel": 1,
+      "filePath": "/home/kingpin/Desktop/SmartCowFarm/Backend/Backend.csproj",
+      "targetGraphs": []
+    },
+    {
       "code": "NU1510",
       "level": "Warning",
       "message": "PackageReference Microsoft.Extensions.Configuration.Json will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.",
