@@ -170,3 +170,4 @@
 /home/kingpin/Desktop/SmartCowFarm/Backend/obj/Debug/net10.0/Backend.pdb
 /home/kingpin/Desktop/SmartCowFarm/Backend/obj/Debug/net10.0/Backend.genruntimeconfig.cache
 /home/kingpin/Desktop/SmartCowFarm/Backend/obj/Debug/net10.0/ref/Backend.dll
+/home/kingpin/Desktop/SmartCowFarm/Backend/bin/Debug/net10.0/dotenv.net.dll

@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "aZTIKQJEnrk=",
+  "dgSpecHash": "xprrjmxSNZs=",
   "success": true,
   "projectFilePath": "/home/kingpin/Desktop/SmartCowFarm/Backend/Backend.csproj",
   "expectedPackageFiles": [
     "/home/kingpin/.nuget/packages/azure.core/1.47.1/azure.core.1.47.1.nupkg.sha512",
     "/home/kingpin/.nuget/packages/azure.identity/1.14.2/azure.identity.1.14.2.nupkg.sha512",
+    "/home/kingpin/.nuget/packages/dotenv.net/4.0.0/dotenv.net.4.0.0.nupkg.sha512",
     "/home/kingpin/.nuget/packages/dotnetenv/3.1.1/dotnetenv.3.1.1.nupkg.sha512",
     "/home/kingpin/.nuget/packages/humanizer.core/2.14.1/humanizer.core.2.14.1.nupkg.sha512",
     "/home/kingpin/.nuget/packages/microsoft.aspnetcore.openapi/10.0.0/microsoft.aspnetcore.openapi.10.0.0.nupkg.sha512",

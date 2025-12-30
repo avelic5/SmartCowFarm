@@ -8,6 +8,10 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        //jedan nacin za system enviroment variables
+        //var DatabaseApiKey = builder.Configuration["DatabaseConnectionString"];
+        //DotNetEnv.Env.Load(); //ucitavamo env file
+        //var DatabaseApiKey = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
 
         // Add services to the container.
         builder.Services.AddControllers()
@@ -23,10 +27,11 @@ public class Program
 
         //baza
         builder.Services.AddDbContext<SmartCowFarmDatabaseContext>(
-        options => options.UseNpgsql(
-            builder.Configuration.GetConnectionString("DefaultConnection")
-    )
-);
+        options => 
+        
+        //options.UseNpgsql(DatabaseApiKey)
+        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+        );
 
         var app = builder.Build();
 
