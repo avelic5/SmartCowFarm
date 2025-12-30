@@ -170,6 +170,9 @@
 /home/kingpin/Desktop/SmartCowFarm/Backend/obj/Debug/net10.0/Backend.pdb
 /home/kingpin/Desktop/SmartCowFarm/Backend/obj/Debug/net10.0/Backend.genruntimeconfig.cache
 /home/kingpin/Desktop/SmartCowFarm/Backend/obj/Debug/net10.0/ref/Backend.dll
+<<<<<<< HEAD
+/home/kingpin/Desktop/SmartCowFarm/Backend/bin/Debug/net10.0/dotenv.net.dll
+=======
 /home/avelic5/Desktop/Projekti/SmartCowFarm/Backend/bin/Debug/net10.0/appsettings.Development.json
 /home/avelic5/Desktop/Projekti/SmartCowFarm/Backend/bin/Debug/net10.0/appsettings.json
 /home/avelic5/Desktop/Projekti/SmartCowFarm/Backend/bin/Debug/net10.0/Backend.staticwebassets.endpoints.json
