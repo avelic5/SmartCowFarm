@@ -14,7 +14,7 @@ export function PrijavniLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto flex min-h-screen w-full max-w-[1400px] flex-col md:flex-row">
+      <div className="flex min-h-screen w-full flex-col md:flex-row">
         <NavigacijskaSideBar
           mobileOpen={isMobileNavOpen}
           onRequestCloseMobile={() => setIsMobileNavOpen(false)}

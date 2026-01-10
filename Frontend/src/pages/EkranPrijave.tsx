@@ -8,6 +8,8 @@ export function EkranPrijave() {
   const [email, setEmail] = useState('');
   const [lozinka, setLozinka] = useState('');
   const [zapamti, setZapamti] = useState(false);
+  const [greska, setGreska] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { prijava } = useAuth();
   const navigate = useNavigate();
   const { isDarkMode } = useSettings();
@@ -28,10 +30,15 @@ export function EkranPrijave() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      setGreska(null);
+      setIsSubmitting(true);
       await prijava(email, lozinka);
       navigate('/kontrolna-tabla');
     } catch (error) {
-      console.error('Greška prilikom prijave:', error);
+      const message = error instanceof Error ? error.message : 'Greška prilikom prijave.';
+      setGreska(message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -63,6 +70,13 @@ export function EkranPrijave() {
 
           {/* Forma za prijavu */}
           <form onSubmit={handleSubmit} className="space-y-5">
+            {greska && (
+              <div
+                className={`rounded-lg border px-4 py-3 text-sm ${isDarkMode ? 'bg-red-950/30 border-red-500/40 text-red-200' : 'bg-red-50 border-red-200 text-red-700'}`}
+              >
+                {greska}
+              </div>
+            )}
             <div>
               <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: labelText }}>
                 Email adresa
@@ -75,6 +89,7 @@ export function EkranPrijave() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="menadzer@farma.ba"
+                  disabled={isSubmitting}
                   className={`w-full pl-11 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all ${
                     isDarkMode ? 'placeholder-[#5f718f]' : 'placeholder-[#9ca3af]'
                   }`}
@@ -102,6 +117,7 @@ export function EkranPrijave() {
                   value={lozinka}
                   onChange={(e) => setLozinka(e.target.value)}
                   placeholder="••••••••"
+                  disabled={isSubmitting}
                   className={`w-full pl-11 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all ${
                     isDarkMode ? 'placeholder-[#5f718f]' : 'placeholder-[#9ca3af]'
                   }`}
@@ -123,6 +139,7 @@ export function EkranPrijave() {
                   type="checkbox"
                   checked={zapamti}
                   onChange={(e) => setZapamti(e.target.checked)}
+                  disabled={isSubmitting}
                   className="w-4 h-4 mr-2 rounded focus:ring-green-500"
                   style={{
                     border: `1px solid ${inputBorder}`,
@@ -143,7 +160,8 @@ export function EkranPrijave() {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white py-3 rounded-lg hover:from-green-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg font-medium"
+              disabled={isSubmitting}
+              className={`w-full bg-gradient-to-r from-green-600 to-blue-600 text-white py-3 rounded-lg transition-all shadow-md font-medium ${isSubmitting ? 'opacity-70 cursor-not-allowed' : 'hover:from-green-700 hover:to-blue-700 hover:shadow-lg'}`}
             >
               Prijavi se
             </button>

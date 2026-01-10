@@ -1,31 +1,32 @@
+import { useMemo } from 'react';
 import { TrendingUp, Droplet, Milk, Gauge } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, BarChart, Bar } from 'recharts';
 import { useSettings } from '../context/SettingsContext';
+import { useData } from '../context/DataContext';
 
-const weekly = [
-  { label: '11.11', litri: 2860 },
-  { label: '18.11', litri: 2940 },
-  { label: '25.11', litri: 3015 },
-  { label: '02.12', litri: 3090 },
-  { label: '07.12', litri: 3185 },
-];
+function parseIsoDate(value: string): number {
+  const t = new Date(value).getTime();
+  return Number.isNaN(t) ? 0 : t;
+}
 
-const sessions = [
-  { session: 'Jutro', avg: 14.2 },
-  { session: 'Podne', avg: 10.8 },
-  { session: 'Večer', avg: 11.4 },
-];
+function dayLabel(iso: string): string {
+  return iso.length >= 10 ? `${iso.slice(8, 10)}.${iso.slice(5, 7)}` : iso;
+}
 
-const cowTable = [
-  { id: 'BOS-001', ime: 'Slavica', prosjek: 32.5, kvalitet: '97', trend: '+6%' },
-  { id: 'BOS-002', ime: 'Milica', prosjek: 29.8, kvalitet: '95', trend: '+3%' },
-  { id: 'BOS-003', ime: 'Ruža', prosjek: 30.8, kvalitet: '96', trend: '+4%' },
-  { id: 'C004', ime: 'Rosie', prosjek: 30.8, kvalitet: '97', trend: '+5%' },
-  { id: 'C005', ime: 'Clover', prosjek: 26.1, kvalitet: '93', trend: '−2%' },
-];
+function weekKey(d: Date): string {
+  const year = d.getFullYear();
+  const jan4 = new Date(year, 0, 4);
+  const jan4Day = (jan4.getDay() + 6) % 7;
+  const week1Start = new Date(jan4);
+  week1Start.setDate(jan4.getDate() - jan4Day);
+  const diffDays = Math.floor((d.getTime() - week1Start.getTime()) / (1000 * 60 * 60 * 24));
+  const week = Math.floor(diffDays / 7) + 1;
+  return `${year}-W${String(week).padStart(2, '0')}`;
+}
 
 export function ProizvodnaMlijeka() {
   const { isDarkMode } = useSettings();
+  const { produkcijaMlijeka, krave } = useData();
 
   const cardBg = isDarkMode ? '#0f1727' : '#ffffff';
   const cardBorder = isDarkMode ? '#1c2436' : '#e5e7eb';
@@ -33,12 +34,92 @@ export function ProizvodnaMlijeka() {
   const subText = isDarkMode ? '#b9c7e3' : '#4b5563';
   const badgeText = isDarkMode ? '#9ad8a8' : '#0f766e';
 
-  const kpi = [
-    { icon: Milk, label: 'Ukupno (30d)', value: '93.6k L', badge: '+8.5% vs prethodni period' },
-    { icon: Droplet, label: 'Prosjek po grlu', value: '31.8 L', badge: 'Target 30 L' },
-    { icon: Gauge, label: 'Kvalitet mlijeka', value: '96.8 /100', badge: 'Stabilno' },
-    { icon: TrendingUp, label: 'Trend sedmica', value: '+8.5%', badge: 'Posljednjih 5 sedmica' },
-  ];
+  const now = useMemo(() => Date.now(), []);
+
+  const last30 = useMemo(() => {
+    const cutoff = now - 30 * 24 * 60 * 60 * 1000;
+    return produkcijaMlijeka.filter((p) => parseIsoDate(p.datum) >= cutoff);
+  }, [now, produkcijaMlijeka]);
+
+  const total30 = useMemo(() => last30.reduce((sum, p) => sum + (Number(p.litri) || 0), 0), [last30]);
+  const cowsCount = krave.length || 1;
+  const avgPerCow = total30 / cowsCount;
+
+  const weekly = useMemo(() => {
+    const byWeek: Record<string, number> = {};
+    for (const p of last30) {
+      const dt = new Date(p.datum);
+      if (Number.isNaN(dt.getTime())) continue;
+      const key = weekKey(dt);
+      byWeek[key] = (byWeek[key] ?? 0) + (Number(p.litri) || 0);
+    }
+
+    return Object.entries(byWeek)
+      .sort(([a], [b]) => (a > b ? 1 : a < b ? -1 : 0))
+      .slice(-5)
+      .map(([key, litri]) => ({
+        label: key,
+        litri,
+      }));
+  }, [last30]);
+
+  const sessions = useMemo(() => {
+    const totals = { Jutro: 0, Podne: 0, 'Večer': 0 } as Record<string, number>;
+    const counts = { Jutro: 0, Podne: 0, 'Večer': 0 } as Record<string, number>;
+
+    for (const p of last30) {
+      if (typeof p.jutro === 'number') {
+        totals.Jutro += p.jutro;
+        counts.Jutro += 1;
+      } else if (typeof p.podne === 'number') {
+        totals.Podne += p.podne;
+        counts.Podne += 1;
+      } else if (typeof p.veče === 'number') {
+        totals['Večer'] += p.veče;
+        counts['Večer'] += 1;
+      }
+    }
+
+    return [
+      { session: 'Jutro', avg: counts.Jutro ? totals.Jutro / counts.Jutro : 0 },
+      { session: 'Podne', avg: counts.Podne ? totals.Podne / counts.Podne : 0 },
+      { session: 'Večer', avg: counts['Večer'] ? totals['Večer'] / counts['Večer'] : 0 },
+    ];
+  }, [last30]);
+
+  const cowTable = useMemo(() => {
+    const byCow: Record<string, { sum: number; n: number }> = {};
+    for (const p of last30) {
+      const id = p.kravaId;
+      const entry = (byCow[id] ??= { sum: 0, n: 0 });
+      entry.sum += Number(p.litri) || 0;
+      entry.n += 1;
+    }
+
+    const cowNameById: Record<string, { oznaka: string; ime: string }> = {};
+    for (const k of krave) cowNameById[k.id] = { oznaka: k.identifikacioniBroj, ime: k.ime };
+
+    return Object.entries(byCow)
+      .map(([kravaId, v]) => {
+        const meta = cowNameById[kravaId];
+        return {
+          id: meta?.oznaka ?? `#${kravaId}`,
+          ime: meta?.ime ?? `Krava #${kravaId}`,
+          prosjek: v.n ? v.sum / v.n : 0,
+          kvalitet: '—',
+          trend: '—',
+        };
+      })
+      .sort((a, b) => b.prosjek - a.prosjek)
+      .slice(0, 10);
+  }, [krave, last30]);
+
+  const kpi = useMemo(() => ([
+    { icon: Milk, label: 'Ukupno (30d)', value: `${(total30 / 1000).toFixed(1)}k L`, badge: `${last30.length} muža` },
+    { icon: Droplet, label: 'Prosjek po grlu', value: `${avgPerCow.toFixed(1)} L`, badge: `Ukupno krava: ${krave.length}` },
+    { icon: Gauge, label: 'Kvalitet mlijeka', value: '—', badge: 'Nema podataka' },
+    { icon: TrendingUp, label: 'Trend sedmica', value: weekly.length ? `${weekly[weekly.length - 1].litri.toFixed(0)} L` : '—', badge: 'Posljednjih 5 sedmica' },
+  ]), [avgPerCow, krave.length, last30.length, total30, weekly]);
 
   return (
     <div className="p-6 md:p-8 space-y-8" style={{ color: cardText }}>
@@ -105,7 +186,7 @@ export function ProizvodnaMlijeka() {
               <Bar dataKey="avg" fill="#3b82f6" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-          <p className="mt-3 text-sm text-gray-600">Večernja muža je +5% u odnosu na prošli mjesec; jutarnja nosi 45% volumena.</p>
+          <p className="mt-3 text-sm text-gray-600">Prosjek litara po muži za sesiju (30 dana).</p>
         </div>
       </div>
 

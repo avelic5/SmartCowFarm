@@ -38,7 +38,7 @@ export function ListaKrava() {
         </div>
         <button
           onClick={() => navigate('/krave/nova')}
-          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 md:px-6 md:py-3 rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+          className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-blue-600 text-white px-4 py-2 md:px-6 md:py-3 rounded-lg transition-all shadow-md hover:from-green-700 hover:to-blue-700"
         >
           <Plus className="w-5 h-5" />
           Dodaj kravu

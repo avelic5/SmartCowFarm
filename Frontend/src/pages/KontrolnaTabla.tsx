@@ -1,32 +1,105 @@
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Milk, Activity, AlertTriangle, CheckSquare, TrendingUp, TrendingDown } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useData } from '../context/DataContext';
 import { useSettings } from '../context/SettingsContext';
+import { api } from '../api';
+import type { OcitanjeSenzoraDto, SenzorDto } from '../api/dto';
 
-const podaciProdukcije = [
-  { datum: '1 Dec', litri: 2850 },
-  { datum: '2 Dec', litri: 2920 },
-  { datum: '3 Dec', litri: 2780 },
-  { datum: '4 Dec', litri: 2950 },
-  { datum: '5 Dec', litri: 3100 },
-  { datum: '6 Dec', litri: 3050 },
-  { datum: '7 Dec', litri: 3200 },
-];
-
-const zoneStaje = [
-  { zona: 'A1', temp: 18.5, vlažnost: 65, status: 'dobro' },
-  { zona: 'A2', temp: 19.2, vlažnost: 68, status: 'dobro' },
-  { zona: 'B1', temp: 22.1, vlažnost: 72, status: 'upozorenje' },
-  { zona: 'B2', temp: 18.8, vlažnost: 64, status: 'dobro' },
-  { zona: 'C1', temp: 17.9, vlažnost: 66, status: 'dobro' },
-  { zona: 'C2', temp: 24.3, vlažnost: 78, status: 'kritično' },
-];
+type ZoneItem = {
+  zona: string;
+  vrijednost: string;
+  status: 'dobro' | 'upozorenje' | 'kritično';
+};
 
 export function KontrolnaTabla() {
   const navigate = useNavigate();
-  const { krave, upozorenja, zadaci } = useData();
+  const { krave, upozorenja, zadaci, produkcijaMlijeka } = useData();
   const { formatDate, formatNumber } = useSettings();
+
+  const [senzori, setSenzori] = useState<SenzorDto[]>([]);
+  const [ocitanja, setOcitanja] = useState<OcitanjeSenzoraDto[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const [s, o] = await Promise.all([api.senzori.list(), api.ocitanjaSenzora.list()]);
+        if (cancelled) return;
+        setSenzori(s);
+        setOcitanja(o);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const lastReadingBySensor = useMemo(() => {
+    const map: Record<number, OcitanjeSenzoraDto> = {};
+    for (const o of ocitanja) {
+      const existing = map[o.idSenzora];
+      if (!existing || (existing.timestamp ?? '') < (o.timestamp ?? '')) map[o.idSenzora] = o;
+    }
+    return map;
+  }, [ocitanja]);
+
+  const zoneStaje = useMemo((): ZoneItem[] => {
+    return senzori.slice(0, 6).map((s) => {
+      const r = lastReadingBySensor[s.idSenzora];
+      const valueNum = r ? Number(r.vrijednost) : NaN;
+
+      let status: ZoneItem['status'] = 'dobro';
+      if (r && !Number.isNaN(valueNum)) {
+        const critical = valueNum < Number(s.pragCriticalMin) || valueNum > Number(s.pragCriticalMax);
+        const warn = valueNum < Number(s.pragNormalnoMin) || valueNum > Number(s.pragNormalnoMax);
+        status = critical ? 'kritično' : warn ? 'upozorenje' : 'dobro';
+      }
+
+      const vrijednost = r && !Number.isNaN(valueNum)
+        ? `${valueNum.toFixed(2)} ${s.jedinicaMjere}`
+        : 'N/A';
+
+      return {
+        zona: s.naziv,
+        vrijednost,
+        status,
+      };
+    });
+  }, [lastReadingBySensor, senzori]);
+
+  const todayIso = useMemo(() => {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }, []);
+
+  const mlijekoDanas = useMemo(() => {
+    return produkcijaMlijeka
+      .filter((p) => p.datum === todayIso)
+      .reduce((sum, p) => sum + (Number(p.litri) || 0), 0);
+  }, [produkcijaMlijeka, todayIso]);
+
+  const podaciProdukcije = useMemo(() => {
+    const byDate: Record<string, number> = {};
+    for (const p of produkcijaMlijeka) {
+      const key = p.datum;
+      byDate[key] = (byDate[key] ?? 0) + (Number(p.litri) || 0);
+    }
+    return Object.entries(byDate)
+      .sort(([a], [b]) => (a > b ? 1 : a < b ? -1 : 0))
+      .slice(-7)
+      .map(([datum, litri]) => ({
+        datum: datum.length >= 10 ? `${datum.slice(8, 10)}.${datum.slice(5, 7)}` : datum,
+        litri,
+      }));
+  }, [produkcijaMlijeka]);
 
   const ukupnoKrava = krave.length;
   const kraveNaMuži = krave.filter(k => k.status !== 'lijecenje').length;
@@ -82,7 +155,7 @@ export function KontrolnaTabla() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">Mlijeko danas (L)</p>
-              <h3 className="text-3xl font-bold text-gray-900 mb-2">{formatNumber(3200)}</h3>
+              <h3 className="text-3xl font-bold text-gray-900 mb-2">{formatNumber(mlijekoDanas)}</h3>
               <div className="flex items-center gap-1 text-sm text-green-600">
                 <TrendingUp className="w-4 h-4" />
                 <span>+4.8% u odnosu na juče</span>
@@ -214,8 +287,8 @@ export function KontrolnaTabla() {
                     zona.status === 'upozorenje' ? 'bg-yellow-500' : 'bg-red-500'
                   }`}></div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Zona {zona.zona}</p>
-                    <p className="text-xs text-gray-500">Temperatura: {zona.temp}°C | Vlažnost: {zona.vlažnost}%</p>
+                    <p className="text-sm font-medium text-gray-900">{zona.zona}</p>
+                    <p className="text-xs text-gray-500">Vrijednost: {zona.vrijednost}</p>
                   </div>
                 </div>
                 <span className={`text-xs font-medium px-3 py-1 rounded-full ${

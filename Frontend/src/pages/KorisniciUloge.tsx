@@ -1,12 +1,16 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { UserPlus, ShieldCheck, Mail, CheckCircle2, XCircle, Search, Check, Minus } from 'lucide-react';
+import { api } from '../api';
 
-const users = [
-  { ime: 'Amar Kovač', email: 'amar@farm.ba', uloga: 'administrator', status: 'aktivan', kreiran: '12.03.2024' },
-  { ime: 'Sara Milić', email: 'sara@farm.ba', uloga: 'veterinar', status: 'aktivan', kreiran: '08.05.2024' },
-  { ime: 'Iva Petrović', email: 'iva@farm.ba', uloga: 'menadžer', status: 'aktivan', kreiran: '20.06.2024' },
-  { ime: 'Faruk Hadžić', email: 'faruk@farm.ba', uloga: 'radnik', status: 'pauziran', kreiran: '11.09.2024' },
-];
+type UserRow = { ime: string; email: string; uloga: string; status: string; kreiran: string };
+
+function mapUloga(radnoMjesto: string | undefined): string {
+  const v = (radnoMjesto ?? '').toLowerCase();
+  if (v.includes('admin')) return 'administrator';
+  if (v.includes('men')) return 'menadžer';
+  if (v.includes('vet') || v.includes('veter')) return 'veterinar';
+  return 'radnik';
+}
 
 const permissions: Record<string, string[]> = {
   administrator: ['Svi podaci', 'Upravljanje korisnicima', 'Postavke sistema', 'Brisanje zapisa'],
@@ -17,6 +21,39 @@ const permissions: Record<string, string[]> = {
 
 export function KorisniciUloge() {
   const [showMatrix, setShowMatrix] = useState(false);
+  const [users, setUsers] = useState<UserRow[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await api.korisnici.list();
+        if (cancelled) return;
+
+        const mapped = res.map((k) => {
+          const statusRaw = (k.statusNaloga ?? '').toLowerCase();
+          const status = statusRaw.includes('pauz') || statusRaw.includes('blok') || statusRaw.includes('neakt') ? 'pauziran' : 'aktivan';
+          const kreiran = k.datumZaposlenja;
+          return {
+            ime: `${k.ime ?? ''} ${k.prezime ?? ''}`.trim() || k.korisnickoIme || k.email,
+            email: k.email,
+            uloga: mapUloga(k.radnoMjesto),
+            status,
+            kreiran,
+          };
+        });
+
+        setUsers(mapped);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const displayRole = (role: string) => role.charAt(0).toUpperCase() + role.slice(1);
 
@@ -49,10 +86,10 @@ export function KorisniciUloge() {
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-3 text-sm text-gray-700">
             <span className="inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 font-medium text-green-700">
-              <CheckCircle2 className="w-4 h-4" /> 3 aktivna
+              <CheckCircle2 className="w-4 h-4" /> {users.filter((u) => u.status === 'aktivan').length} aktivna
             </span>
             <span className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 font-medium text-amber-700">
-              <XCircle className="w-4 h-4" /> 1 pauziran
+              <XCircle className="w-4 h-4" /> {users.filter((u) => u.status !== 'aktivan').length} pauziran
             </span>
           </div>
           <div className="relative w-full">

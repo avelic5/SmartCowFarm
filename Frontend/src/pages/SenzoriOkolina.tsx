@@ -1,21 +1,24 @@
+import { useEffect, useMemo, useState } from 'react';
 import { Thermometer, Droplets, Wind, AlertTriangle, CloudSun } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
+import { api } from '../api';
+import type { OcitanjeSenzoraDto, SenzorDto } from '../api/dto';
 
-const zones = [
-  { name: 'Zona A1', temp: 18.5, hum: 65, co2: 720, status: 'dobro', updated: 'prije 2 min' },
-  { name: 'Zona A2', temp: 19.2, hum: 68, co2: 760, status: 'dobro', updated: 'prije 3 min' },
-  { name: 'Zona B1', temp: 22.1, hum: 72, co2: 910, status: 'upozorenje', updated: 'prije 1 min' },
-  { name: 'Zona B2', temp: 24.3, hum: 78, co2: 1020, status: 'kritično', updated: 'prije 30 sek' },
-  { name: 'Zona C1', temp: 17.9, hum: 66, co2: 680, status: 'dobro', updated: 'prije 4 min' },
-  { name: 'Zona C2', temp: 24.3, hum: 78, co2: 1040, status: 'kritično', updated: 'prije 45 sek' },
-];
-
-const outdoor = {
-  temp: 6.5,
-  hum: 54,
-  wind: 12,
-  condition: 'Oblačno',
+type SensorCard = {
+  name: string;
+  value: string;
+  status: 'dobro' | 'upozorenje' | 'kritično';
+  updated: string;
 };
+
+function minutesAgo(ts: string): string {
+  const t = new Date(ts).getTime();
+  if (Number.isNaN(t)) return '';
+  const diff = Date.now() - t;
+  const mins = Math.max(0, Math.floor(diff / 60000));
+  if (mins === 0) return 'prije <1 min';
+  return `prije ${mins} min`;
+}
 
 export function SenzoriOkolina() {
   const { isDarkMode } = useSettings();
@@ -23,6 +26,75 @@ export function SenzoriOkolina() {
   const cardBorder = isDarkMode ? '#1c2436' : '#e5e7eb';
   const cardText = isDarkMode ? '#e7eefc' : '#0f1727';
   const subText = isDarkMode ? '#b9c7e3' : '#4b5563';
+
+  const [senzori, setSenzori] = useState<SenzorDto[]>([]);
+  const [ocitanja, setOcitanja] = useState<OcitanjeSenzoraDto[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const [s, o] = await Promise.all([api.senzori.list(), api.ocitanjaSenzora.list()]);
+        if (cancelled) return;
+        setSenzori(s);
+        setOcitanja(o);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const lastReadingBySensor = useMemo(() => {
+    const map: Record<number, OcitanjeSenzoraDto> = {};
+    for (const o of ocitanja) {
+      const existing = map[o.idSenzora];
+      if (!existing || (existing.timestamp ?? '') < (o.timestamp ?? '')) map[o.idSenzora] = o;
+    }
+    return map;
+  }, [ocitanja]);
+
+  const sensorCards = useMemo((): SensorCard[] => {
+    return senzori.map((s) => {
+      const r = lastReadingBySensor[s.idSenzora];
+      const valueNum = r ? Number(r.vrijednost) : NaN;
+
+      let status: SensorCard['status'] = 'dobro';
+      if (r && !Number.isNaN(valueNum)) {
+        const critical = valueNum < Number(s.pragCriticalMin) || valueNum > Number(s.pragCriticalMax);
+        const warn = valueNum < Number(s.pragNormalnoMin) || valueNum > Number(s.pragNormalnoMax);
+        status = critical ? 'kritično' : warn ? 'upozorenje' : 'dobro';
+      }
+
+      const value = r && !Number.isNaN(valueNum)
+        ? `${valueNum.toFixed(2)} ${s.jedinicaMjere}`
+        : 'N/A';
+
+      const updated = r ? minutesAgo(r.timestamp) : '';
+
+      return {
+        name: s.naziv,
+        value,
+        status,
+        updated,
+      };
+    });
+  }, [lastReadingBySensor, senzori]);
+
+  const criticalCount = sensorCards.filter((c) => c.status === 'kritično').length;
+  const warnCount = sensorCards.filter((c) => c.status === 'upozorenje').length;
+
+  const avgValue = useMemo(() => {
+    const values = sensorCards
+      .map((c) => Number(c.value.split(' ')[0]))
+      .filter((v) => !Number.isNaN(v));
+    if (!values.length) return null;
+    const sum = values.reduce((a, b) => a + b, 0);
+    return sum / values.length;
+  }, [sensorCards]);
 
   return (
     <div className="p-6 md:p-8 space-y-8">
@@ -48,8 +120,8 @@ export function SenzoriOkolina() {
             </div>
             <div>
               <p className="text-sm" style={{ color: subText }}>Prosječna temperatura</p>
-              <p className="text-2xl font-semibold" style={{ color: cardText }}>20.3°C</p>
-              <p className="text-xs" style={{ color: subText }}>Idealni raspon: 18–22°C</p>
+              <p className="text-2xl font-semibold" style={{ color: cardText }}>{avgValue != null ? avgValue.toFixed(2) : 'N/A'}</p>
+              <p className="text-xs" style={{ color: subText }}>Prosjek zadnjih očitanja</p>
             </div>
           </div>
         </div>
@@ -69,8 +141,8 @@ export function SenzoriOkolina() {
             </div>
             <div>
               <p className="text-sm" style={{ color: subText }}>Prosječna vlažnost</p>
-              <p className="text-2xl font-semibold" style={{ color: cardText }}>69%</p>
-              <p className="text-xs" style={{ color: subText }}>Target: 60–70%</p>
+              <p className="text-2xl font-semibold" style={{ color: cardText }}>N/A</p>
+              <p className="text-xs" style={{ color: subText }}>Nema standardizovanih podataka</p>
             </div>
           </div>
         </div>
@@ -90,8 +162,8 @@ export function SenzoriOkolina() {
             </div>
             <div>
               <p className="text-sm" style={{ color: subText }}>CO₂ prosjek</p>
-              <p className="text-2xl font-semibold" style={{ color: cardText }}>840 ppm</p>
-              <p className="text-xs" style={{ color: subText }}>Upozorenje iznad 950 ppm</p>
+              <p className="text-2xl font-semibold" style={{ color: cardText }}>N/A</p>
+              <p className="text-xs" style={{ color: subText }}>Nema standardizovanih podataka</p>
             </div>
           </div>
         </div>
@@ -111,8 +183,8 @@ export function SenzoriOkolina() {
             </div>
             <div>
               <p className="text-sm" style={{ color: subText }}>Aktivna upozorenja</p>
-              <p className="text-2xl font-semibold" style={{ color: cardText }}>2 kritična</p>
-              <p className="text-xs" style={{ color: subText }}>Zona B2, C2</p>
+              <p className="text-2xl font-semibold" style={{ color: cardText }}>{criticalCount} kritična</p>
+              <p className="text-xs" style={{ color: subText }}>{warnCount} upozorenja</p>
             </div>
           </div>
         </div>
@@ -125,7 +197,7 @@ export function SenzoriOkolina() {
             <span className="text-sm text-gray-500">Real-time</span>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            {zones.map((z) => (
+            {sensorCards.map((z) => (
               <div key={z.name} className="rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition-colors">
                 <div className="flex items-center justify-between">
                   <p className="font-semibold text-gray-900">{z.name}</p>
@@ -134,16 +206,11 @@ export function SenzoriOkolina() {
                   </span>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-3 text-sm text-gray-700">
-                  <span className="inline-flex items-center gap-1"><Thermometer className="w-4 h-4" /> {z.temp}°C</span>
-                  <span className="inline-flex items-center gap-1"><Droplets className="w-4 h-4" /> {z.hum}%</span>
-                  <span className="inline-flex items-center gap-1"><Wind className="w-4 h-4" /> {z.co2} ppm</span>
+                  <span className="inline-flex items-center gap-1"><Thermometer className="w-4 h-4" /> {z.value}</span>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
                   <span>Posljednje ažuriranje</span>
-                  <span>{z.updated}</span>
-                </div>
-                <div className="mt-3 h-2 w-full rounded-full bg-gray-100">
-                  <div className={`h-2 rounded-full ${z.co2 > 1000 ? 'bg-red-500' : z.co2 > 900 ? 'bg-amber-500' : 'bg-green-500'}`} style={{ width: `${Math.min((z.co2 / 1200) * 100, 100)}%` }}></div>
+                  <span>{z.updated || '—'}</span>
                 </div>
               </div>
             ))}
@@ -160,20 +227,12 @@ export function SenzoriOkolina() {
           </div>
           <div className="space-y-3 text-sm" style={{ color: subText }}>
             <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-2"><Thermometer className="w-4 h-4" /> Temperatura</span>
-              <span className="font-semibold" style={{ color: cardText }}>{outdoor.temp}°C</span>
+              <span className="inline-flex items-center gap-2"><Thermometer className="w-4 h-4" /> Senzora</span>
+              <span className="font-semibold" style={{ color: cardText }}>{senzori.length}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-2"><Droplets className="w-4 h-4" /> Vlažnost</span>
-              <span className="font-semibold" style={{ color: cardText }}>{outdoor.hum}%</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-2"><Wind className="w-4 h-4" /> Vjetar</span>
-              <span className="font-semibold" style={{ color: cardText }}>{outdoor.wind} km/h</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-2"><CloudSun className="w-4 h-4" /> Stanje</span>
-              <span className="font-semibold" style={{ color: cardText }}>{outdoor.condition}</span>
+              <span className="inline-flex items-center gap-2"><Wind className="w-4 h-4" /> Očitanja</span>
+              <span className="font-semibold" style={{ color: cardText }}>{ocitanja.length}</span>
             </div>
           </div>
           <div
@@ -184,7 +243,7 @@ export function SenzoriOkolina() {
               border: isDarkMode ? '1px solid #20304a' : '1px solid #cde4ff',
             }}
           >
-            Napomena: Zona B2/C2 prelazi CO₂ prag. Aktiviraj ventilaciju na +15% i provjeri maglenje.
+            Napomena: Pragovi se uzimaju iz definicije senzora.
           </div>
         </div>
       </div>

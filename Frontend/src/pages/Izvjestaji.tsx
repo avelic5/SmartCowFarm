@@ -4,45 +4,34 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, R
 import { useData } from '../context/DataContext';
 import { useSettings } from '../context/SettingsContext';
 
-// Statički podaci za vizualizaciju (Ostaju nepromijenjeni jer služe kao preview)
-const milkTrend = [
-  { date: '11.11', liters: 2860 },
-  { date: '18.11', liters: 2940 },
-  { date: '25.11', liters: 3015 },
-  { date: '02.12', liters: 3090 },
-  { date: '07.12', liters: 3185 },
-];
+function formatDdMm(date: Date): string {
+  return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
 
-const topCows = [
-  { name: 'Slavica (BOS-001)', avg: 32.5 },
-  { name: 'Milica (BOS-002)', avg: 29.8 },
-  { name: 'Ruža (BOS-003)', avg: 30.8 },
-  { name: 'Daisy (C002)', avg: 28.3 },
-  { name: 'Bella (C001)', avg: 32.5 },
-];
+function formatDdMmYyyy(date: Date): string {
+  return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
+}
 
-// AŽURIRANO: Brzi pristup listi - samo ključni izvještaji
-const recentReports = [
-  { title: 'Karton Krave (BOS-001)', date: '08.12.2025', size: '0.8 MB', type: 'PDF' },
-  { title: 'Mjesečni Izvještaj Proizvodnje', date: '07.12.2025', size: '2.4 MB', type: 'PDF' },
-  { title: 'Zdravlje i Tretmani – Decembar', date: '05.12.2025', size: '1.2 MB', type: 'PDF' },
-  { title: 'Senzori i okolina - Q4', date: '25.11.2025', size: '1.9 MB', type: 'CSV' },
-];
+function dateToLocalMidnightMs(isoDate: string): number {
+  const t = new Date(`${isoDate}T00:00:00`).getTime();
+  return Number.isNaN(t) ? NaN : t;
+}
 
-// AŽURIRANO: Tabela liste - samo ključni izvještaji
-const tableRows = [
-  { id: 'R-2025-12-08', naziv: 'Karton krave (BOS-001)', period: 'Tekući datum', status: 'Spremno', tip: 'PDF', trend: 'N/A' },
-  { id: 'R-2025-12-01', naziv: 'Mjesečni Izvještaj Proizvodnje', period: '01–30.11.2025', status: 'Spremno', tip: 'PDF', trend: '+4.8%' },
-  { id: 'R-2025-11-28', naziv: 'Izvještaj Zdravlja i Tretmana', period: '01.10–28.11.2025', status: 'Spremno', tip: 'PDF', trend: '+2.1%' },
-  { id: 'R-2025-11-25', naziv: 'Senzori i okolina – Q4', period: '01.10–25.11.2025', status: 'Spremno', tip: 'CSV', trend: 'Stabilno' },
-];
+function weekStartMondayMs(d: Date): number {
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1) - day;
+  const monday = new Date(d);
+  monday.setDate(d.getDate() + diff);
+  monday.setHours(0, 0, 0, 0);
+  return monday.getTime();
+}
 
 export function Izvjestaji() {
   const [range, setRange] = useState('last-30');
   const [type, setType] = useState('monthly-prod'); // Postavljamo default na Mjesečni izvještaj
   const [selectedEntity, setSelectedEntity] = useState(''); // Novi state za Cow ID ili drugi specifični entitet
 
-  const { krave } = useData();
+  const { krave, produkcijaMlijeka } = useData();
   const { isDarkMode } = useSettings();
 
   const panelBg = isDarkMode ? '#0f1727' : '#ffffff';
@@ -67,12 +56,155 @@ export function Izvjestaji() {
     [healthSplit]
   );
 
-  const kpi = useMemo(() => ([
-    { label: 'Ukupna proizvodnja', value: '93.6k L', delta: '+8.5%', deltaClass: isDarkMode ? 'text-emerald-300' : 'text-emerald-700' },
-    { label: 'Prosjek po grlu', value: '31.8 L', delta: 'Odlično', deltaClass: isDarkMode ? 'text-blue-200' : 'text-blue-700' },
-    { label: 'Kvalitet mlijeka', value: '96.8 /100', delta: 'Stabilno', deltaClass: isDarkMode ? 'text-emerald-200' : 'text-emerald-700' },
-    { label: 'Zdravstveni score', value: '92 /100', delta: 'Uzlazno', deltaClass: isDarkMode ? 'text-purple-200' : 'text-purple-700' },
-  ]), [isDarkMode]);
+  const rangeWindow = useMemo(() => {
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    const start = new Date(end);
+
+    if (range === 'last-90') {
+      start.setDate(end.getDate() - 89);
+    } else if (range === 'ytd') {
+      start.setMonth(0, 1);
+      start.setHours(0, 0, 0, 0);
+    } else {
+      start.setDate(end.getDate() - 29);
+    }
+
+    start.setHours(0, 0, 0, 0);
+    return { startMs: start.getTime(), endMs: end.getTime() };
+  }, [range]);
+
+  const productionInRange = useMemo(() => {
+    return produkcijaMlijeka.filter((p) => {
+      const t = dateToLocalMidnightMs(p.datum);
+      if (Number.isNaN(t)) return false;
+      return t >= rangeWindow.startMs && t <= rangeWindow.endMs;
+    });
+  }, [produkcijaMlijeka, rangeWindow]);
+
+  const productionPrevRange = useMemo(() => {
+    const windowDays = Math.max(1, Math.round((rangeWindow.endMs - rangeWindow.startMs) / (24 * 60 * 60 * 1000)) + 1);
+    const prevEndMs = rangeWindow.startMs - 1;
+    const prevStartMs = prevEndMs - (windowDays - 1) * 24 * 60 * 60 * 1000;
+
+    return produkcijaMlijeka.filter((p) => {
+      const t = dateToLocalMidnightMs(p.datum);
+      if (Number.isNaN(t)) return false;
+      return t >= prevStartMs && t <= prevEndMs;
+    });
+  }, [produkcijaMlijeka, rangeWindow]);
+
+  const totals = useMemo(() => {
+    const total = productionInRange.reduce((sum, p) => sum + (Number(p.litri) || 0), 0);
+    const totalPrev = productionPrevRange.reduce((sum, p) => sum + (Number(p.litri) || 0), 0);
+
+    const cowSet = new Set(productionInRange.map((p) => p.kravaId));
+    const cowCount = cowSet.size || krave.length || 1;
+    const avgPerCow = total / cowCount;
+
+    const healthy = krave.filter((k) => k.status === 'zdrava').length;
+    const healthScore = krave.length ? Math.round((healthy / krave.length) * 100) : 0;
+
+    const deltaPct = totalPrev > 0 ? ((total - totalPrev) / totalPrev) * 100 : total > 0 ? 100 : 0;
+    return { total, totalPrev, avgPerCow, healthScore, deltaPct };
+  }, [krave, productionInRange, productionPrevRange]);
+
+  const totalLabel = useMemo(() => {
+    if (totals.total >= 10000) return `${(totals.total / 1000).toFixed(1)}k L`;
+    return `${Math.round(totals.total)} L`;
+  }, [totals.total]);
+
+  const deltaLabel = useMemo(() => {
+    if (totals.totalPrev === 0) return totals.total > 0 ? '+N/A' : 'N/A';
+    const sign = totals.deltaPct >= 0 ? '+' : '';
+    return `${sign}${totals.deltaPct.toFixed(1)}%`;
+  }, [totals.deltaPct, totals.total, totals.totalPrev]);
+
+  const milkTrend = useMemo(() => {
+    const buckets: Record<number, number> = {};
+    for (const p of productionInRange) {
+      const t = dateToLocalMidnightMs(p.datum);
+      if (Number.isNaN(t)) continue;
+      const wk = weekStartMondayMs(new Date(t));
+      buckets[wk] = (buckets[wk] ?? 0) + (Number(p.litri) || 0);
+    }
+    return Object.entries(buckets)
+      .map(([k, liters]) => {
+        const d = new Date(Number(k));
+        return { date: formatDdMm(d), liters };
+      })
+      .sort((a, b) => (a.date > b.date ? 1 : -1))
+      .slice(-5);
+  }, [productionInRange]);
+
+  const topCows = useMemo(() => {
+    const totalsByCow: Record<string, { liters: number; days: Set<string> }> = {};
+    for (const p of productionInRange) {
+      const id = p.kravaId;
+      if (!totalsByCow[id]) totalsByCow[id] = { liters: 0, days: new Set() };
+      totalsByCow[id].liters += Number(p.litri) || 0;
+      totalsByCow[id].days.add(p.datum);
+    }
+
+    return Object.entries(totalsByCow)
+      .map(([kravaId, v]) => {
+        const cow = krave.find((k) => k.id === kravaId);
+        const days = Math.max(1, v.days.size);
+        const avg = v.liters / days;
+        return {
+          name: cow ? `${cow.ime} (${cow.identifikacioniBroj})` : `Krava #${kravaId}`,
+          avg: Number.isFinite(avg) ? Number(avg.toFixed(1)) : 0,
+        };
+      })
+      .sort((a, b) => b.avg - a.avg)
+      .slice(0, 5);
+  }, [krave, productionInRange]);
+
+  const tableRows = useMemo(() => {
+    const now = new Date();
+    const dateId = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const periodText = `${formatDdMm(new Date(rangeWindow.startMs))}–${formatDdMm(new Date(rangeWindow.endMs))}`;
+
+    const cowLabel = (() => {
+      const cow = krave.find((k) => k.id === selectedEntity);
+      if (!cow) return 'Karton krave';
+      return `Karton krave (${cow.identifikacioniBroj})`;
+    })();
+
+    const trend = totals.totalPrev > 0 ? deltaLabel : 'N/A';
+
+    return [
+      { id: `R-${dateId}-01`, naziv: cowLabel, period: 'Tekući datum', status: 'Spremno', tip: 'PDF', trend: 'N/A' },
+      { id: `R-${dateId}-02`, naziv: 'Mjesečni izvještaj proizvodnje', period: periodText, status: 'Spremno', tip: 'PDF', trend },
+      { id: `R-${dateId}-03`, naziv: 'Izvještaj zdravlja i tretmana', period: periodText, status: 'Spremno', tip: 'PDF', trend: 'N/A' },
+      { id: `R-${dateId}-04`, naziv: 'Senzori i okolina', period: periodText, status: 'Spremno', tip: 'CSV', trend: 'N/A' },
+    ];
+  }, [deltaLabel, krave, rangeWindow, selectedEntity, totals.totalPrev]);
+
+  const recentReports = useMemo(() => {
+    const today = new Date();
+    const baseDate = formatDdMmYyyy(today);
+    const cow = krave.find((k) => k.id === selectedEntity);
+
+    return [
+      { title: cow ? `Karton krave (${cow.identifikacioniBroj})` : 'Karton krave', date: baseDate, size: '—', type: 'PDF' },
+      { title: 'Mjesečni izvještaj proizvodnje', date: baseDate, size: '—', type: 'PDF' },
+      { title: 'Zdravlje i tretmani', date: baseDate, size: '—', type: 'PDF' },
+      { title: 'Senzori i okolina', date: baseDate, size: '—', type: 'CSV' },
+    ];
+  }, [krave, selectedEntity]);
+
+  const kpi = useMemo(() => {
+    const avgLabel = `${totals.avgPerCow.toFixed(1)} L`;
+    const healthLabel = `${totals.healthScore} /100`;
+
+    return [
+      { label: 'Ukupna proizvodnja', value: totalLabel, delta: deltaLabel, deltaClass: isDarkMode ? 'text-emerald-300' : 'text-emerald-700' },
+      { label: 'Prosjek po grlu', value: avgLabel, delta: krave.length ? 'Stanje' : 'N/A', deltaClass: isDarkMode ? 'text-blue-200' : 'text-blue-700' },
+      { label: 'Kvalitet mlijeka', value: 'N/A', delta: 'N/A', deltaClass: isDarkMode ? 'text-emerald-200' : 'text-emerald-700' },
+      { label: 'Zdravstveni score', value: healthLabel, delta: 'N/A', deltaClass: isDarkMode ? 'text-purple-200' : 'text-purple-700' },
+    ];
+  }, [deltaLabel, isDarkMode, krave.length, totalLabel, totals.avgPerCow, totals.healthScore]);
 
   return (
     <div className="p-6 md:p-8 space-y-10">
@@ -134,10 +266,9 @@ export function Izvjestaji() {
                     onChange={(e) => setSelectedEntity(e.target.value)}
                   >
                     <option value="">Odaberi kravu...</option>
-                    {/* Placeholder za krave, u stvarnosti bi se mapirao 'krave' array */}
-                    <option value="BOS-001">BOS-001 (Slavica)</option>
-                    <option value="BOS-002">BOS-002 (Milica)</option>
-                    <option value="C001">C001 (Bella)</option>
+                    {krave.map((k) => (
+                      <option key={k.id} value={k.id}>{k.identifikacioniBroj} ({k.ime})</option>
+                    ))}
                   </select>
                 </div>
               </>

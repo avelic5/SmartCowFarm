@@ -1,39 +1,180 @@
+import { useEffect, useMemo, useState } from 'react';
 import { HeartPulse, Stethoscope, Syringe, CalendarClock, AlertTriangle, Baby, Pill } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
+import { api } from '../api';
+import type { KorisnikDto, TerapijaAplikacijeDto, TerapijaDto, ZdravstveniSlucajDto } from '../api/dto';
+import { useData } from '../context/DataContext';
 
-const healthKpi = [
-  { icon: HeartPulse, label: 'Zdrave krave', value: '112', detail: '+3 vs prošli mjesec' },
-  { icon: Syringe, label: 'Na liječenju', value: '3', detail: '2 antibiotik, 1 kontrola' },
-  { icon: Stethoscope, label: 'Pregledi 30d', value: '27', detail: '92% završeno' },
-  { icon: Baby, label: 'Repro ciklusi', value: '8 u toku', detail: '4 AI zakazana' },
-];
-
-const treatments = [
-  { date: '02.12', cow: 'Ruža (BOS-003)', type: 'Antibiotik', vet: 'dr. Milić', status: 'u toku' },
-  { date: '29.11', cow: 'Clover (C005)', type: 'Pregled nakon terapije', vet: 'dr. Milić', status: 'praćenje' },
-  { date: '25.11', cow: 'Molly (C008)', type: 'Vakcinacija (BVD)', vet: 'dr. Sara', status: 'završeno' },
-  { date: '18.11', cow: 'Bella (C001)', type: 'Kontrola papaka', vet: 'dr. Sara', status: 'završeno' },
-];
-
-const reproEvents = [
-  { date: '09.12', cow: 'Milica (BOS-002)', event: 'AI termin', note: '3. ciklus, odličan score' },
-  { date: '12.12', cow: 'Slavica (BOS-001)', event: 'Ultrazvuk', note: '35. dan nakon AI' },
-  { date: '15.12', cow: 'Ruža (BOS-003)', event: 'Sinhronizacija', note: 'zakazati PGF2α' },
-];
-
-const risks = [
-  { cow: 'Clover (C005)', issue: 'Pad proizvodnje 12% u 7d', severity: 'Upozorenje', action: 'Pojačati ishranu + CBC' },
-  { cow: 'Ruža (BOS-003)', issue: 'Antibiotik – kontrola 05.12', severity: 'Kritično', action: 'Obavezna kontrola kvaliteta mlijeka' },
-  { cow: 'Daisy (C002)', issue: 'Temperatura 38.9°C 2x u 3 dana', severity: 'Upozorenje', action: 'Kultura mlijeka + NSAID' },
-];
+type HealthKpiItem = {
+  icon: typeof HeartPulse;
+  label: string;
+  value: string;
+  detail: string;
+};
 
 export function ZdravljeReprodukcija() {
   const { isDarkMode } = useSettings();
+  const { krave } = useData();
   const cardBg = isDarkMode ? '#0f1727' : '#ffffff';
   const cardBorder = isDarkMode ? '#1c2436' : '#e5e7eb';
   const cardText = isDarkMode ? '#e7eefc' : '#0f1727';
   const subText = isDarkMode ? '#b9c7e3' : '#4b5563';
   const badgeText = isDarkMode ? '#9ad8a8' : '#0f766e';
+
+  const [slucajevi, setSlucajevi] = useState<ZdravstveniSlucajDto[]>([]);
+  const [terapije, setTerapije] = useState<TerapijaDto[]>([]);
+  const [aplikacije, setAplikacije] = useState<TerapijaAplikacijeDto[]>([]);
+  const [korisnici, setKorisnici] = useState<KorisnikDto[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const [s, t, a, k] = await Promise.all([
+          api.zdravstveniSlucajevi.list(),
+          api.terapije.list(),
+          api.terapijeAplikacije.list(),
+          api.korisnici.list(),
+        ]);
+        if (cancelled) return;
+        setSlucajevi(s);
+        setTerapije(t);
+        setAplikacije(a);
+        setKorisnici(k);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const cowById = useMemo(() => {
+    const map: Record<string, { ime: string; ident: string }> = {};
+    for (const c of krave) map[c.id] = { ime: c.ime, ident: c.identifikacioniBroj };
+    return map;
+  }, [krave]);
+
+  const slucajById = useMemo(() => {
+    const map: Record<number, ZdravstveniSlucajDto> = {};
+    for (const s of slucajevi) map[s.idSlucaja] = s;
+    return map;
+  }, [slucajevi]);
+
+  const korisnikById = useMemo(() => {
+    const map: Record<number, string> = {};
+    for (const k of korisnici) map[k.idKorisnika] = `${k.ime} ${k.prezime}`.trim();
+    return map;
+  }, [korisnici]);
+
+  const now = Date.now();
+  const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
+
+  const zdraveKraveCount = krave.filter((k) => k.status === 'zdrava').length;
+  const naLijecenjuCount = krave.filter((k) => k.status === 'lijecenje').length;
+  const pregledi30dCount = slucajevi.filter((s) => {
+    const dt = new Date(s.datumOtvaranja).getTime();
+    return !Number.isNaN(dt) && dt >= thirtyDaysAgo;
+  }).length;
+
+  const terapijeUTokuCount = terapije.filter((t) => {
+    const start = new Date(t.datumPocetka).getTime();
+    const end = new Date(t.datumKraja).getTime();
+    if (Number.isNaN(start) || Number.isNaN(end)) return false;
+    return start <= now && now <= end;
+  }).length;
+
+  const zakazaneAplikacijeCount = aplikacije.filter((a) => {
+    const dt = new Date(a.datumVrijeme).getTime();
+    return !Number.isNaN(dt) && dt > now;
+  }).length;
+
+  const healthKpi: HealthKpiItem[] = [
+    { icon: HeartPulse, label: 'Zdrave krave', value: String(zdraveKraveCount), detail: '' },
+    { icon: Syringe, label: 'Na liječenju', value: String(naLijecenjuCount), detail: '' },
+    { icon: Stethoscope, label: 'Pregledi 30d', value: String(pregledi30dCount), detail: '' },
+    { icon: Baby, label: 'Repro ciklusi', value: `${terapijeUTokuCount} u toku`, detail: `${zakazaneAplikacijeCount} aplikacija zakazana` },
+  ];
+
+  const treatments = useMemo(() => {
+    const withDate = terapije
+      .map((t) => ({
+        dto: t,
+        date: new Date(t.datumPocetka).getTime(),
+      }))
+      .filter((x) => !Number.isNaN(x.date))
+      .sort((a, b) => b.date - a.date)
+      .slice(0, 6);
+
+    return withDate.map(({ dto: t, date }) => {
+      const slucaj = slucajById[t.idSlucaja];
+      const cow = slucaj ? cowById[String(slucaj.idKrave)] : undefined;
+
+      const end = new Date(t.datumKraja).getTime();
+      const status = !Number.isNaN(end) && end < now ? 'završeno' : date <= now ? 'u toku' : 'praćenje';
+
+      const dd = new Date(date);
+      const dateText = `${String(dd.getDate()).padStart(2, '0')}.${String(dd.getMonth() + 1).padStart(2, '0')}`;
+
+      return {
+        date: dateText,
+        cow: cow ? `${cow.ime} (${cow.ident})` : slucaj ? `Krava #${slucaj.idKrave}` : `Slučaj #${t.idSlucaja}`,
+        type: `${t.nazivLijeka} (${t.doza} ${t.jedinicaMjere})`,
+        vet: slucaj?.idVeterinara != null ? (korisnikById[slucaj.idVeterinara] ?? `Korisnik #${slucaj.idVeterinara}`) : '—',
+        status,
+      };
+    });
+  }, [cowById, korisnikById, now, slucajById, terapije]);
+
+  const reproEvents = useMemo(() => {
+    const upcoming = aplikacije
+      .map((a) => ({
+        dto: a,
+        date: new Date(a.datumVrijeme).getTime(),
+      }))
+      .filter((x) => !Number.isNaN(x.date) && x.date >= now)
+      .sort((a, b) => a.date - b.date)
+      .slice(0, 5);
+
+    return upcoming.map(({ dto: a, date }) => {
+      const terapija = terapije.find((t) => t.idTerapije === a.idTerapije);
+      const slucaj = terapija ? slucajById[terapija.idSlucaja] : undefined;
+      const cow = slucaj ? cowById[String(slucaj.idKrave)] : undefined;
+      const dd = new Date(date);
+      const dateText = `${String(dd.getDate()).padStart(2, '0')}.${String(dd.getMonth() + 1).padStart(2, '0')}`;
+      const izvrsioc = korisnikById[a.idIzvrsilac] ?? `Korisnik #${a.idIzvrsilac}`;
+
+      return {
+        date: dateText,
+        cow: cow ? `${cow.ime} (${cow.ident})` : slucaj ? `Krava #${slucaj.idKrave}` : `Terapija #${a.idTerapije}`,
+        event: 'Aplikacija terapije',
+        note: `${terapija?.nazivLijeka ?? '—'} • ${a.primijenjenaKolicina} • ${izvrsioc}`,
+      };
+    });
+  }, [aplikacije, cowById, korisnikById, now, slucajById, terapije]);
+
+  const risks = useMemo(() => {
+    const mapped = slucajevi
+      .map((s) => {
+        const cow = cowById[String(s.idKrave)];
+        const riskText = String(s.aiNivoRizika ?? '').toLowerCase();
+        const severity = riskText.includes('krit') || riskText.includes('high') || riskText.includes('visok') ? 'Kritično' : 'Upozorenje';
+        const issue = s.aiTipAnomalije?.trim() ? `${s.aiTipAnomalije}: ${s.razlogOtvaranja}` : s.razlogOtvaranja;
+        const action = s.dijagnoza?.trim() ? s.dijagnoza : s.napomene?.trim() ? s.napomene : '—';
+        return {
+          cow: cow ? `${cow.ime} (${cow.ident})` : `Krava #${s.idKrave}`,
+          issue: issue || s.opisSimptoma || '—',
+          severity,
+          action,
+        };
+      })
+      .sort((a, b) => (a.severity === b.severity ? 0 : a.severity === 'Kritično' ? -1 : 1))
+      .slice(0, 6);
+
+    return mapped;
+  }, [cowById, slucajevi]);
 
   return (
     <div className="p-6 md:p-8 space-y-8">
@@ -76,7 +217,7 @@ export function ZdravljeReprodukcija() {
             <span className="text-sm text-gray-500">Hronološki prikaz</span>
           </div>
           <div className="space-y-4">
-            {treatments.map((item) => (
+            {(treatments.length ? treatments : [{ date: '—', cow: 'Nema podataka', type: '—', vet: '—', status: 'praćenje' as const }]).map((item) => (
               <div key={`${item.cow}-${item.date}`} className="flex items-start gap-4 rounded-lg border border-gray-200 p-4 hover:bg-gray-50">
                 <div className="mt-1 h-2 w-2 rounded-full bg-green-500" />
                 <div className="flex-1">
@@ -101,7 +242,7 @@ export function ZdravljeReprodukcija() {
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Reproduktivni kalendar</h3>
           <div className="space-y-3">
-            {reproEvents.map((ev) => (
+            {(reproEvents.length ? reproEvents : [{ date: '—', cow: 'Nema podataka', event: '—', note: '' }]).map((ev) => (
               <div key={ev.cow} className="rounded-lg border border-gray-200 p-4 hover:bg-gray-50">
                 <div className="flex items-center justify-between text-sm text-gray-600">
                   <span className="inline-flex items-center gap-2"><Baby className="w-4 h-4" /> {ev.event}</span>
@@ -124,7 +265,7 @@ export function ZdravljeReprodukcija() {
           <AlertTriangle className="w-5 h-5 text-amber-500" />
         </div>
         <div className="grid gap-4 md:grid-cols-3">
-          {risks.map((r) => (
+          {(risks.length ? risks : [{ cow: 'Nema podataka', issue: '—', severity: 'Upozorenje', action: '—' }]).map((r) => (
             <div key={r.cow} className="rounded-lg border border-gray-200 p-4 hover:shadow-sm transition-shadow">
               <p className="text-sm font-semibold text-gray-900">{r.cow}</p>
               <p className="text-sm text-gray-700 mt-1">{r.issue}</p>

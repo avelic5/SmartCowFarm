@@ -3,25 +3,29 @@ import { ArrowLeft, Edit, Activity, Milk, Calendar, Weight, AlertCircle } from '
 import { useData } from '../context/DataContext';
 import { useSettings } from '../context/SettingsContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-// Mock podaci za proizvodnju
-const mockProdukcija = [
-  { datum: '1.12', litri: 32.5 },
-  { datum: '2.12', litri: 34.2 },
-  { datum: '3.12', litri: 31.8 },
-  { datum: '4.12', litri: 33.5 },
-  { datum: '5.12', litri: 35.1 },
-  { datum: '6.12', litri: 34.8 },
-  { datum: '7.12', litri: 33.2 },
-];
+import { useMemo } from 'react';
 
 export function DetaljiKrave() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { krave } = useData();
+  const { krave, produkcijaMlijeka } = useData();
   const { formatDate, formatNumber } = useSettings();
   
   const krava = krave.find(k => k.id === id);
+
+  const chartData = useMemo(() => {
+    if (!id) return [] as Array<{ datum: string; litri: number }>;
+    const items = produkcijaMlijeka
+      .filter((p) => p.kravaId === id)
+      .slice()
+      .sort((a, b) => (a.datum > b.datum ? 1 : a.datum < b.datum ? -1 : 0))
+      .slice(-7);
+
+    return items.map((p) => ({
+      datum: p.datum.length >= 10 ? `${p.datum.slice(8, 10)}.${p.datum.slice(5, 7)}` : p.datum,
+      litri: p.litri,
+    }));
+  }, [id, produkcijaMlijeka]);
 
   if (!krava) {
     return (
@@ -166,28 +170,32 @@ export function DetaljiKrave() {
       {/* Grafikon proizvodnje */}
       <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Proizvodnja mlijeka - Posljednjih 7 dana</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={mockProdukcija}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="datum" stroke="#6b7280" style={{ fontSize: '12px' }} />
-            <YAxis stroke="#6b7280" style={{ fontSize: '12px' }} />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: '#fff', 
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px'
-              }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="litri" 
-              stroke="#10b981" 
-              strokeWidth={3}
-              dot={{ fill: '#10b981', r: 4 }}
-              name="Litri"
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        {chartData.length === 0 ? (
+          <div className="text-sm text-gray-600">Nema podataka o muži za ovu kravu.</div>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="datum" stroke="#6b7280" style={{ fontSize: '12px' }} />
+              <YAxis stroke="#6b7280" style={{ fontSize: '12px' }} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: '#fff', 
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px'
+                }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="litri" 
+                stroke="#10b981" 
+                strokeWidth={3}
+                dot={{ fill: '#10b981', r: 4 }}
+                name="Litri"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
       {/* Brze akcije */}

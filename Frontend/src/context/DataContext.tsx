@@ -1,5 +1,16 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { Krava, ProdukcijaMlijeka, ZdravstveniZapis, Upozorenje, Zadatak } from '../types';
+import { api } from '../api';
+import type { KravaDto, UpozorenjeDto, ZadatakDto } from '../api/dto';
+import {
+  mapKravaDtoToUi,
+  mapMuzaDtoToUi,
+  mapUpozorenjeDtoToUi,
+  mapZadatakDtoToUi,
+  mapZdravstveniSlucajToUi,
+  mapUiStatusToBackend,
+  mapUiStatusToBackendTask,
+} from '../api/mappers';
 
 interface DataContextType {
   krave: Krava[];
@@ -19,256 +30,199 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Mock podaci
-const mockKrave: Krava[] = [
-  {
-    id: '1',
-    identifikacioniBroj: 'BOS-001',
-    ime: 'Slavica',
-    starost: 4,
-    pasmina: 'Holštajn',
-    status: 'zdrava',
-    datumRodjenja: '2020-03-15',
-    tezina: 650,
-    prosjecnaProdukcija: 32.5,
-    zadnjaProdukcija: 34.2,
-    zadnjiPregled: '2025-11-28',
-  },
-  {
-    id: '2',
-    identifikacioniBroj: 'BOS-002',
-    ime: 'Milica',
-    starost: 3,
-    pasmina: 'Simentalac',
-    status: 'zdrava',
-    datumRodjenja: '2021-05-20',
-    tezina: 580,
-    prosjecnaProdukcija: 28.3,
-    zadnjaProdukcija: 29.1,
-  },
-  {
-    id: '3',
-    identifikacioniBroj: 'BOS-003',
-    ime: 'Ruža',
-    starost: 5,
-    pasmina: 'Holštajn',
-    status: 'praćenje',
-    datumRodjenja: '2019-08-10',
-    tezina: 670,
-    prosjecnaProdukcija: 30.8,
-    zadnjaProdukcija: 26.5,
-    zadnjiPregled: '2025-12-01',
-  },
-  {
-    id: '4',
-    identifikacioniBroj: 'BOS-004',
-    ime: 'Jasna',
-    starost: 4,
-    pasmina: 'Holštajn',
-    status: 'zdrava',
-    datumRodjenja: '2020-09-02',
-    tezina: 640,
-    prosjecnaProdukcija: 31.2,
-    zadnjaProdukcija: 33.0,
-  },
-  {
-    id: '5',
-    identifikacioniBroj: 'BOS-005',
-    ime: 'Nada',
-    starost: 6,
-    pasmina: 'Simentalac',
-    status: 'zdrava',
-    datumRodjenja: '2018-12-14',
-    tezina: 690,
-    prosjecnaProdukcija: 29.5,
-    zadnjaProdukcija: 30.1,
-  },
-  {
-    id: '6',
-    identifikacioniBroj: 'BOS-006',
-    ime: 'Iva',
-    starost: 2,
-    pasmina: 'Holštajn',
-    status: 'praćenje',
-    datumRodjenja: '2023-03-21',
-    tezina: 520,
-    prosjecnaProdukcija: 24.0,
-    zadnjaProdukcija: 22.8,
-    zadnjiPregled: '2025-11-30',
-  },
-  {
-    id: '7',
-    identifikacioniBroj: 'BOS-007',
-    ime: 'Vesna',
-    starost: 3,
-    pasmina: 'Holštajn',
-    status: 'lijecenje',
-    datumRodjenja: '2022-01-11',
-    tezina: 600,
-    prosjecnaProdukcija: 26.7,
-    zadnjaProdukcija: 18.4,
-    zadnjiPregled: '2025-12-02',
-    zadnjeVakcinisanje: '2025-09-15',
-    napomene: 'Antibiotska terapija - 5 dana',
-  },
-  {
-    id: '8',
-    identifikacioniBroj: 'BOS-008',
-    ime: 'Sara',
-    starost: 4,
-    pasmina: 'Simentalac',
-    status: 'zdrava',
-    datumRodjenja: '2020-07-18',
-    tezina: 630,
-    prosjecnaProdukcija: 30.4,
-    zadnjaProdukcija: 31.0,
-  },
-  {
-    id: '9',
-    identifikacioniBroj: 'BOS-009',
-    ime: 'Ljilja',
-    starost: 5,
-    pasmina: 'Holštajn',
-    status: 'praćenje',
-    datumRodjenja: '2019-06-07',
-    tezina: 655,
-    prosjecnaProdukcija: 27.9,
-    zadnjaProdukcija: 25.3,
-  },
-  {
-    id: '10',
-    identifikacioniBroj: 'BOS-010',
-    ime: 'Anka',
-    starost: 3,
-    pasmina: 'Holštajn',
-    status: 'zdrava',
-    datumRodjenja: '2021-10-29',
-    tezina: 610,
-    prosjecnaProdukcija: 29.1,
-    zadnjaProdukcija: 30.0,
-  },
-  {
-    id: '11',
-    identifikacioniBroj: 'BOS-011',
-    ime: 'Mira',
-    starost: 6,
-    pasmina: 'Simentalac',
-    status: 'zdrava',
-    datumRodjenja: '2018-05-05',
-    tezina: 700,
-    prosjecnaProdukcija: 28.8,
-    zadnjaProdukcija: 29.2,
-  },
-  {
-    id: '12',
-    identifikacioniBroj: 'BOS-012',
-    ime: 'Katja',
-    starost: 4,
-    pasmina: 'Holštajn',
-    status: 'zdrava',
-    datumRodjenja: '2020-02-12',
-    tezina: 645,
-    prosjecnaProdukcija: 31.7,
-    zadnjaProdukcija: 32.4,
-  },
-  {
-    id: '13',
-    identifikacioniBroj: 'BOS-013',
-    ime: 'Ena',
-    starost: 2,
-    pasmina: 'Simentalac',
-    status: 'zdrava',
-    datumRodjenja: '2023-08-30',
-    tezina: 510,
-    prosjecnaProdukcija: 23.5,
-    zadnjaProdukcija: 24.1,
-  },
-  {
-    id: '14',
-    identifikacioniBroj: 'BOS-014',
-    ime: 'Dora',
-    starost: 5,
-    pasmina: 'Holštajn',
-    status: 'zdrava',
-    datumRodjenja: '2019-04-08',
-    tezina: 675,
-    prosjecnaProdukcija: 30.2,
-    zadnjaProdukcija: 29.8,
-  },
-  {
-    id: '15',
-    identifikacioniBroj: 'BOS-015',
-    ime: 'Lana',
-    starost: 3,
-    pasmina: 'Holštajn',
-    status: 'zdrava',
-    datumRodjenja: '2021-12-22',
-    tezina: 605,
-    prosjecnaProdukcija: 27.4,
-    zadnjaProdukcija: 28.0,
-  },
-];
+function todayIsoDate(): string {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
 
-const mockUpozorenja: Upozorenje[] = [
-  {
-    id: '1',
-    tip: 'kritično',
-    naslov: 'Visoka temperatura u zoni C2',
-    poruka: 'Temperatura u zoni C2 je dostigla 24.3°C što premašuje preporučeni limit',
-    datum: new Date().toISOString(),
-    pročitano: false,
-  },
-  {
-    id: '2',
-    tip: 'upozorenje',
-    naslov: 'Pad proizvodnje - Ruža',
-    poruka: 'Krava Ruža (BOS-003) pokazuje smanjenje proizvodnje od 14% u posljednjih 3 dana',
-    datum: new Date().toISOString(),
-    kravaId: '3',
-    pročitano: false,
-  },
-];
+function getReadAlertIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem('readAlertIds');
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.map(String));
+  } catch {
+    return new Set();
+  }
+}
 
-const mockZadaci: Zadatak[] = [
-  {
-    id: '1',
-    naslov: 'Vakcinacija - Grupa A',
-    opis: 'Godišnja vakcinacija za krave u grupi A',
-    prioritet: 'visok',
-    status: 'novo',
-    rokIzvršenja: '2025-12-10',
-  },
-  {
-    id: '2',
-    naslov: 'Provjera senzora - Zona B',
-    opis: 'Rutinska provjera senzora temperature i vlažnosti',
-    prioritet: 'srednji',
-    status: 'u-toku',
-    rokIzvršenja: '2025-12-08',
-  },
-];
+function setReadAlertIds(ids: Set<string>) {
+  try {
+    localStorage.setItem('readAlertIds', JSON.stringify(Array.from(ids)));
+  } catch {
+    return;
+  }
+}
+
+function buildKravaDtoFromUi(base: KravaDto | undefined, ui: Partial<Krava>, id?: number): KravaDto {
+  const nowDate = todayIsoDate();
+
+  return {
+    idKrave: id ?? base?.idKrave ?? 0,
+    oznakaKrave: ui.identifikacioniBroj ?? base?.oznakaKrave ?? '',
+    rasa: ui.pasmina ?? base?.rasa ?? '',
+    datumRodjenja: ui.datumRodjenja ?? base?.datumRodjenja ?? nowDate,
+    datumDolaska: base?.datumDolaska ?? nowDate,
+    porijekloTip: base?.porijekloTip ?? 'Nepoznato',
+    idMajke: base?.idMajke ?? null,
+    trenutniStatus: mapUiStatusToBackend(
+      ui.status ??
+        mapKravaDtoToUi(
+          base ?? {
+            idKrave: 0,
+            oznakaKrave: '',
+            rasa: '',
+            datumRodjenja: nowDate,
+            datumDolaska: nowDate,
+            porijekloTip: 'Nepoznato',
+            trenutniStatus: 'PodNadzorom',
+            pocetnaTezina: 0,
+            trenutnaProcijenjenaTezina: 0,
+            opisIzgleda: '',
+            prosjecnaDnevnaProizvodnjaL: 0,
+            napomene: '',
+          },
+        ).status,
+    ),
+    pocetnaTezina: ui.tezina ?? base?.pocetnaTezina ?? 0,
+    trenutnaProcijenjenaTezina: ui.tezina ?? base?.trenutnaProcijenjenaTezina ?? base?.pocetnaTezina ?? 0,
+    opisIzgleda: ui.ime ?? base?.opisIzgleda ?? '',
+    prosjecnaDnevnaProizvodnjaL: ui.prosjecnaProdukcija ?? base?.prosjecnaDnevnaProizvodnjaL ?? 0,
+    napomene: ui.napomene ?? base?.napomene ?? '',
+  };
+}
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [krave, setKrave] = useState<Krava[]>(mockKrave);
+  const [krave, setKrave] = useState<Krava[]>([]);
   const [produkcijaMlijeka, setProdukcijaMlijeka] = useState<ProdukcijaMlijeka[]>([]);
   const [zdravstveniZapisi, setZdravstveniZapisi] = useState<ZdravstveniZapis[]>([]);
-  const [upozorenja, setUpozorenja] = useState<Upozorenje[]>(mockUpozorenja);
-  const [zadaci, setZadaci] = useState<Zadatak[]>(mockZadaci);
+  const [upozorenja, setUpozorenja] = useState<Upozorenje[]>([]);
+  const [zadaci, setZadaci] = useState<Zadatak[]>([]);
+
+  const [kraveDto, setKraveDto] = useState<Record<string, KravaDto>>({});
+  const [zadaciDto, setZadaciDto] = useState<Record<string, ZadatakDto>>({});
+  const [upozorenjaDto, setUpozorenjaDto] = useState<Record<string, UpozorenjeDto>>({});
+  const [readAlertIds, setReadAlertIdsState] = useState<Set<string>>(() => getReadAlertIds());
+
+  const readAlertIdsMemo = useMemo(() => readAlertIds, [readAlertIds]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const [kraveRes, muzeRes, upozRes, zadaciRes, slucajeviRes] = await Promise.all([
+          api.krave.list(),
+          api.muze.list(),
+          api.upozorenja.list(),
+          api.zadaci.list(),
+          api.zdravstveniSlucajevi.list(),
+        ]);
+
+        if (cancelled) return;
+
+        const kraveMap: Record<string, KravaDto> = {};
+        const kraveUi = kraveRes.map((k) => {
+          kraveMap[String(k.idKrave)] = k;
+          return mapKravaDtoToUi(k);
+        });
+
+        const zadaciMap: Record<string, ZadatakDto> = {};
+        const zadaciUi = zadaciRes.map((z) => {
+          zadaciMap[String(z.idZadatka)] = z;
+          return mapZadatakDtoToUi(z);
+        });
+
+        const upozMap: Record<string, UpozorenjeDto> = {};
+        const upozUi = upozRes.map((u) => {
+          upozMap[String(u.idUpozorenja)] = u;
+          return mapUpozorenjeDtoToUi(u, readAlertIdsMemo.has(String(u.idUpozorenja)));
+        });
+
+        const muzeUi = muzeRes.map(mapMuzaDtoToUi);
+        const slucajeviUi = slucajeviRes.map(mapZdravstveniSlucajToUi);
+
+        setKrave(kraveUi);
+        setKraveDto(kraveMap);
+        setZadaci(zadaciUi);
+        setZadaciDto(zadaciMap);
+        setUpozorenja(upozUi);
+        setUpozorenjaDto(upozMap);
+        setProdukcijaMlijeka(muzeUi);
+        setZdravstveniZapisi(slucajeviUi);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [readAlertIdsMemo]);
 
   const dodajKravu = (krava: Omit<Krava, 'id'>) => {
-    const novaKrava: Krava = {
-      ...krava,
-      id: Date.now().toString(),
+    const run = async () => {
+      const dto = buildKravaDtoFromUi(undefined, krava);
+      const created = await api.krave.create({
+        oznakaKrave: dto.oznakaKrave,
+        rasa: dto.rasa,
+        datumRodjenja: dto.datumRodjenja,
+        datumDolaska: dto.datumDolaska,
+        porijekloTip: dto.porijekloTip,
+        idMajke: dto.idMajke ?? null,
+        trenutniStatus: dto.trenutniStatus,
+        pocetnaTezina: dto.pocetnaTezina,
+        trenutnaProcijenjenaTezina: dto.trenutnaProcijenjenaTezina,
+        opisIzgleda: dto.opisIzgleda,
+        prosjecnaDnevnaProizvodnjaL: dto.prosjecnaDnevnaProizvodnjaL,
+        napomene: dto.napomene,
+      });
+
+      setKrave((prev) => {
+        const next = prev.filter((x) => x.id !== String(created.idKrave));
+        next.push(mapKravaDtoToUi(created));
+        return next;
+      });
+
+      setKraveDto((prev) => ({ ...prev, [String(created.idKrave)]: created }));
     };
-    setKrave([...krave, novaKrava]);
+
+    run().catch((e) => console.error(e));
   };
 
   const ažurirajKravu = (id: string, promjene: Partial<Krava>) => {
-    setKrave(krave.map(k => k.id === id ? { ...k, ...promjene } : k));
+    const run = async () => {
+      const numericId = Number(id);
+      const base = kraveDto[id];
+      const dto = buildKravaDtoFromUi(base, promjene, numericId);
+
+      await api.krave.update(numericId, dto);
+
+      setKrave((prev) => prev.map((k) => (k.id === id ? { ...k, ...promjene } : k)));
+      setKraveDto((prev) => ({ ...prev, [id]: dto }));
+    };
+
+    run().catch((e) => console.error(e));
   };
 
   const obrišiKravu = (id: string) => {
-    setKrave(krave.filter(k => k.id !== id));
+    const run = async () => {
+      await api.krave.delete(Number(id));
+      setKrave((prev) => prev.filter((k) => k.id !== id));
+      setKraveDto((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    };
+
+    run().catch((e) => console.error(e));
   };
 
   const dodajProdukciju = (produkcija: Omit<ProdukcijaMlijeka, 'id'>) => {
@@ -288,15 +242,45 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const označiUpozorenjeKaoPročitano = (id: string) => {
-    setUpozorenja(upozorenja.map(u => u.id === id ? { ...u, pročitano: true } : u));
+    setUpozorenja((prev) => prev.map((u) => (u.id === id ? { ...u, pročitano: true } : u)));
+    setReadAlertIdsState((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      setReadAlertIds(next);
+      return next;
+    });
   };
 
   const označiSvaUpozorenjaKaoPročitana = () => {
-    setUpozorenja(upozorenja.map(u => ({ ...u, pročitano: true })));
+    setUpozorenja((prev) => prev.map((u) => ({ ...u, pročitano: true })));
+    setReadAlertIdsState((prev) => {
+      const next = new Set(prev);
+      for (const u of upozorenja) next.add(u.id);
+      setReadAlertIds(next);
+      return next;
+    });
   };
 
   const ažurirajZadatak = (id: string, promjene: Partial<Zadatak>) => {
-    setZadaci(zadaci.map(z => z.id === id ? { ...z, ...promjene } : z));
+    const run = async () => {
+      const base = zadaciDto[id];
+      if (!base) {
+        setZadaci((prev) => prev.map((z) => (z.id === id ? { ...z, ...promjene } : z)));
+        return;
+      }
+
+      const nextDto: ZadatakDto = {
+        ...base,
+        statusZadatka: promjene.status ? mapUiStatusToBackendTask(promjene.status) : base.statusZadatka,
+      };
+
+      await api.zadaci.update(Number(id), nextDto);
+
+      setZadaci((prev) => prev.map((z) => (z.id === id ? { ...z, ...promjene } : z)));
+      setZadaciDto((prev) => ({ ...prev, [id]: nextDto }));
+    };
+
+    run().catch((e) => console.error(e));
   };
 
   return (
