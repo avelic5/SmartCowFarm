@@ -1,1 +1,16 @@
+@config "../tailwind.config.js";
 @import "tailwindcss";
+
+@layer base {
+	body {
+		@apply bg-gray-50 text-gray-900;
+	}
+
+	html.dark {
+		color-scheme: dark;
+	}
+
+	html.dark body {
+		@apply bg-slate-950 text-slate-50;
+	}
+}

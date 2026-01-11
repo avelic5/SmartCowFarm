@@ -13,7 +13,7 @@ export function PrijavniLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
       <div className="flex min-h-screen w-full flex-col md:flex-row">
         <NavigacijskaSideBar
           mobileOpen={isMobileNavOpen}
@@ -24,7 +24,7 @@ export function PrijavniLayout() {
             isMobileNavOpen={isMobileNavOpen}
             onToggleMobileNav={() => setIsMobileNavOpen((open) => !open)}
           />
-          <main className="flex-1 overflow-y-auto bg-gray-50 px-4 pb-8 md:px-8 lg:px-10">
+          <main className="flex-1 overflow-y-auto bg-gray-50 px-4 pb-8 dark:bg-slate-950 md:px-8 lg:px-10">
             <Outlet />
           </main>
         </div>

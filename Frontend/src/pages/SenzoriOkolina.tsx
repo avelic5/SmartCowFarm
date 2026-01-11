@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Thermometer, Droplets, Wind, AlertTriangle, CloudSun } from 'lucide-react';
-import { useSettings } from '../context/SettingsContext';
 import { api } from '../api';
 import type { OcitanjeSenzoraDto, SenzorDto } from '../api/dto';
 
@@ -21,12 +20,6 @@ function minutesAgo(ts: string): string {
 }
 
 export function SenzoriOkolina() {
-  const { isDarkMode } = useSettings();
-  const cardBg = isDarkMode ? '#0f1727' : '#ffffff';
-  const cardBorder = isDarkMode ? '#1c2436' : '#e5e7eb';
-  const cardText = isDarkMode ? '#e7eefc' : '#0f1727';
-  const subText = isDarkMode ? '#b9c7e3' : '#4b5563';
-
   const [senzori, setSenzori] = useState<SenzorDto[]>([]);
   const [ocitanja, setOcitanja] = useState<OcitanjeSenzoraDto[]>([]);
 
@@ -99,116 +92,96 @@ export function SenzoriOkolina() {
   return (
     <div className="p-6 md:p-8 space-y-8">
       <div>
-        <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Senzori i okolina</h1>
-        <p className={`mt-1 mb-4 ${isDarkMode ? 'text-slate-200' : 'text-gray-600'}`}>Uslovi u staji, upozorenja i vanjski meteo podaci</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-slate-100">Senzori i okolina</h1>
+        <p className="mt-1 mb-4 text-gray-600 dark:text-slate-300">Uslovi u staji, upozorenja i vanjski meteo podaci</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div
-          className="rounded-xl border p-4 shadow-sm"
-          style={{ backgroundColor: cardBg, borderColor: cardBorder }}
+          className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50"
         >
           <div className="flex items-center gap-3">
             <div
-              className="h-10 w-10 rounded-lg flex items-center justify-center border text-white"
-              style={{
-                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#0f1727',
-                borderColor: isDarkMode ? 'rgba(255,255,255,0.25)' : '#0f1727',
-              }}
+              className="h-10 w-10 rounded-lg flex items-center justify-center border border-slate-900 bg-slate-900 text-white dark:border-slate-700 dark:bg-slate-800"
             >
-              <Thermometer className="w-5 h-5" style={{ color: '#ffffff' }} />
+              <Thermometer className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-sm" style={{ color: subText }}>Prosječna temperatura</p>
-              <p className="text-2xl font-semibold" style={{ color: cardText }}>{avgValue != null ? avgValue.toFixed(2) : 'N/A'}</p>
-              <p className="text-xs" style={{ color: subText }}>Prosjek zadnjih očitanja</p>
+              <p className="text-sm text-gray-600 dark:text-slate-300">Prosječna temperatura</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-slate-100">{avgValue != null ? avgValue.toFixed(2) : 'N/A'}</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400">Prosjek zadnjih očitanja</p>
             </div>
           </div>
         </div>
         <div
-          className="rounded-xl border p-4 shadow-sm"
-          style={{ backgroundColor: cardBg, borderColor: cardBorder }}
+          className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50"
         >
           <div className="flex items-center gap-3">
             <div
-              className="h-10 w-10 rounded-lg flex items-center justify-center border text-white"
-              style={{
-                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#0f1727',
-                borderColor: isDarkMode ? 'rgba(255,255,255,0.25)' : '#0f1727',
-              }}
+              className="h-10 w-10 rounded-lg flex items-center justify-center border border-slate-900 bg-slate-900 text-white dark:border-slate-700 dark:bg-slate-800"
             >
-              <Droplets className="w-5 h-5" style={{ color: '#ffffff' }} />
+              <Droplets className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-sm" style={{ color: subText }}>Prosječna vlažnost</p>
-              <p className="text-2xl font-semibold" style={{ color: cardText }}>N/A</p>
-              <p className="text-xs" style={{ color: subText }}>Nema standardizovanih podataka</p>
+              <p className="text-sm text-gray-600 dark:text-slate-300">Prosječna vlažnost</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-slate-100">N/A</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400">Nema standardizovanih podataka</p>
             </div>
           </div>
         </div>
         <div
-          className="rounded-xl border p-4 shadow-sm"
-          style={{ backgroundColor: cardBg, borderColor: cardBorder }}
+          className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50"
         >
           <div className="flex items-center gap-3">
             <div
-              className="h-10 w-10 rounded-lg flex items-center justify-center border text-white"
-              style={{
-                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#0f1727',
-                borderColor: isDarkMode ? 'rgba(255,255,255,0.25)' : '#0f1727',
-              }}
+              className="h-10 w-10 rounded-lg flex items-center justify-center border border-slate-900 bg-slate-900 text-white dark:border-slate-700 dark:bg-slate-800"
             >
-              <Wind className="w-5 h-5" style={{ color: '#ffffff' }} />
+              <Wind className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-sm" style={{ color: subText }}>CO₂ prosjek</p>
-              <p className="text-2xl font-semibold" style={{ color: cardText }}>N/A</p>
-              <p className="text-xs" style={{ color: subText }}>Nema standardizovanih podataka</p>
+              <p className="text-sm text-gray-600 dark:text-slate-300">CO₂ prosjek</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-slate-100">N/A</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400">Nema standardizovanih podataka</p>
             </div>
           </div>
         </div>
         <div
-          className="rounded-xl border p-4 shadow-sm"
-          style={{ backgroundColor: cardBg, borderColor: cardBorder }}
+          className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50"
         >
           <div className="flex items-center gap-3">
             <div
-              className="h-10 w-10 rounded-lg flex items-center justify-center border text-white"
-              style={{
-                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#0f1727',
-                borderColor: isDarkMode ? 'rgba(255,255,255,0.25)' : '#0f1727',
-              }}
+              className="h-10 w-10 rounded-lg flex items-center justify-center border border-slate-900 bg-slate-900 text-white dark:border-slate-700 dark:bg-slate-800"
             >
-              <AlertTriangle className="w-5 h-5" style={{ color: '#ffffff' }} />
+              <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-sm" style={{ color: subText }}>Aktivna upozorenja</p>
-              <p className="text-2xl font-semibold" style={{ color: cardText }}>{criticalCount} kritična</p>
-              <p className="text-xs" style={{ color: subText }}>{warnCount} upozorenja</p>
+              <p className="text-sm text-gray-600 dark:text-slate-300">Aktivna upozorenja</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-slate-100">{criticalCount} kritična</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400">{warnCount} upozorenja</p>
             </div>
           </div>
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3 mt-4 md:mt-6">
-        <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Zone u staji</h3>
-            <span className="text-sm text-gray-500">Real-time</span>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Zone u staji</h3>
+            <span className="text-sm text-gray-500 dark:text-slate-400">Real-time</span>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             {sensorCards.map((z) => (
-              <div key={z.name} className="rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition-colors">
+              <div key={z.name} className="rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition-colors dark:border-slate-700 dark:hover:bg-slate-950/40">
                 <div className="flex items-center justify-between">
-                  <p className="font-semibold text-gray-900">{z.name}</p>
+                  <p className="font-semibold text-gray-900 dark:text-slate-100">{z.name}</p>
                   <span className={`rounded-full px-3 py-1 text-xs font-medium ${z.status === 'dobro' ? 'bg-green-50 text-green-700' : z.status === 'upozorenje' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'}`}>
                     {z.status}
                   </span>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-3 text-sm text-gray-700">
+                <div className="mt-2 flex flex-wrap gap-3 text-sm text-gray-700 dark:text-slate-200">
                   <span className="inline-flex items-center gap-1"><Thermometer className="w-4 h-4" /> {z.value}</span>
                 </div>
-                <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                <div className="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-slate-400">
                   <span>Posljednje ažuriranje</span>
                   <span>{z.updated || '—'}</span>
                 </div>
@@ -217,32 +190,22 @@ export function SenzoriOkolina() {
           </div>
         </div>
 
-        <div
-          className="rounded-xl border p-6 shadow-sm"
-          style={{ backgroundColor: cardBg, borderColor: cardBorder, color: cardText }}
-        >
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold" style={{ color: cardText }}>Vanjski uslovi</h3>
-            <CloudSun className="w-5 h-5" style={{ color: '#ffffff' }} />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Vanjski uslovi</h3>
+            <CloudSun className="w-5 h-5 text-gray-500 dark:text-slate-300" />
           </div>
-          <div className="space-y-3 text-sm" style={{ color: subText }}>
+          <div className="space-y-3 text-sm text-gray-600 dark:text-slate-300">
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-2"><Thermometer className="w-4 h-4" /> Senzora</span>
-              <span className="font-semibold" style={{ color: cardText }}>{senzori.length}</span>
+              <span className="font-semibold text-gray-900 dark:text-slate-100">{senzori.length}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-2"><Wind className="w-4 h-4" /> Očitanja</span>
-              <span className="font-semibold" style={{ color: cardText }}>{ocitanja.length}</span>
+              <span className="font-semibold text-gray-900 dark:text-slate-100">{ocitanja.length}</span>
             </div>
           </div>
-          <div
-            className="mt-5 rounded-lg p-4 text-xs leading-relaxed"
-            style={{
-              backgroundColor: isDarkMode ? '#132035' : '#e5f2ff',
-              color: isDarkMode ? '#fdfaf2' : '#0f1727',
-              border: isDarkMode ? '1px solid #20304a' : '1px solid #cde4ff',
-            }}
-          >
+          <div className="mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-xs leading-relaxed text-blue-900 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-200">
             Napomena: Pragovi se uzimaju iz definicije senzora.
           </div>
         </div>

@@ -13,26 +13,26 @@ export function Zadaci() {
   return (
     <div className="p-4 md:p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Zadaci</h1>
-        <p className="text-gray-600 mt-1">Upravljanje dnevnim zadacima i obavezama</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-slate-100">Zadaci</h1>
+        <p className="text-gray-600 mt-1 dark:text-slate-300">Upravljanje dnevnim zadacima i obavezama</p>
       </div>
 
       {/* Statistika */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-600">Novi zadaci</p>
+        <div className="bg-white p-4 rounded-lg border border-gray-200 dark:bg-slate-900/50 dark:border-slate-700">
+          <p className="text-sm text-gray-600 dark:text-slate-300">Novi zadaci</p>
           <p className="text-2xl font-bold text-blue-600">
             {zadaci.filter(z => z.status === 'novo').length}
           </p>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-600">U toku</p>
+        <div className="bg-white p-4 rounded-lg border border-gray-200 dark:bg-slate-900/50 dark:border-slate-700">
+          <p className="text-sm text-gray-600 dark:text-slate-300">U toku</p>
           <p className="text-2xl font-bold text-yellow-600">
             {zadaci.filter(z => z.status === 'u-toku').length}
           </p>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-600">Završeno</p>
+        <div className="bg-white p-4 rounded-lg border border-gray-200 dark:bg-slate-900/50 dark:border-slate-700">
+          <p className="text-sm text-gray-600 dark:text-slate-300">Završeno</p>
           <p className="text-2xl font-bold text-green-600">
             {zadaci.filter(z => z.status === 'završeno').length}
           </p>
@@ -40,13 +40,13 @@ export function Zadaci() {
       </div>
 
       {/* Lista zadataka */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Svi zadaci</h3>
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden dark:bg-slate-900/50 dark:border-slate-700">
+        <div className="p-4 border-b border-gray-200 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Svi zadaci</h3>
         </div>
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-gray-200 dark:divide-slate-700">
           {zadaci.map(zadatak => (
-            <div key={zadatak.id} className="p-6 hover:bg-gray-50 transition-colors">
+            <div key={zadatak.id} className="p-6 hover:bg-gray-50 transition-colors dark:hover:bg-slate-950/40">
               <div className="flex items-start gap-4">
                 <div className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer
                   ${zadatak.status === 'završeno' ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}
@@ -62,8 +62,8 @@ export function Zadaci() {
                 
                 <div className="flex-1">
                   <div className="flex items-start justify-between mb-2">
-                    <h4 className={`font-semibold text-gray-900 ${
-                      zadatak.status === 'završeno' ? 'line-through text-gray-400' : ''
+                    <h4 className={`font-semibold text-gray-900 dark:text-slate-100 ${
+                      zadatak.status === 'završeno' ? 'line-through text-gray-400 dark:text-slate-500' : ''
                     }`}>
                       {zadatak.naslov}
                     </h4>
@@ -85,7 +85,7 @@ export function Zadaci() {
                     </div>
                   </div>
                   
-                  <p className="text-sm text-gray-600 mb-3">{zadatak.opis}</p>
+                  <p className="text-sm text-gray-600 mb-3 dark:text-slate-300">{zadatak.opis}</p>
                   
                   <div className="flex items-center gap-3 flex-wrap">
                     <span className={`text-xs px-2 py-1 rounded ${
@@ -96,13 +96,13 @@ export function Zadaci() {
                       {zadatak.prioritet.charAt(0).toUpperCase() + zadatak.prioritet.slice(1)} prioritet
                     </span>
                     
-                    <span className="flex items-center gap-1 text-xs text-gray-500">
+                    <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-slate-400">
                       <Clock className="w-3 h-3" />
                       Rok: {formatDate(zadatak.rokIzvršenja)}
                     </span>
                     
                     {zadatak.dodijeljeno && (
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-500 dark:text-slate-400">
                         Dodijeljeno: {zadatak.dodijeljeno}
                       </span>
                     )}

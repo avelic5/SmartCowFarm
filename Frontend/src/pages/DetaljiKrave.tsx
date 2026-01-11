@@ -9,7 +9,7 @@ export function DetaljiKrave() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { krave, produkcijaMlijeka } = useData();
-  const { formatDate, formatNumber } = useSettings();
+  const { formatDate, formatNumber, isDarkMode } = useSettings();
   
   const krava = krave.find(k => k.id === id);
 
@@ -32,8 +32,8 @@ export function DetaljiKrave() {
       <div className="p-4 md:p-8">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Krava nije pronađena</h2>
-          <p className="text-gray-600 mb-6">Krava sa ID-em {id} ne postoji u sistemu.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-slate-100 mb-2">Krava nije pronađena</h2>
+          <p className="text-gray-600 dark:text-slate-300 mb-6">Krava sa ID-em {id} ne postoji u sistemu.</p>
           <button
             onClick={() => navigate('/krave')}
             className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-500 transition-colors"
@@ -52,13 +52,13 @@ export function DetaljiKrave() {
         <div>
           <button
             onClick={() => navigate('/krave')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 dark:text-slate-300 dark:hover:text-slate-100"
           >
             <ArrowLeft className="w-5 h-5" />
             Nazad na listu
           </button>
-          <h1 className="text-3xl font-bold text-gray-900">{krava.ime}</h1>
-          <p className="text-gray-600 mt-1">{krava.identifikacioniBroj}</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-slate-100">{krava.ime}</h1>
+          <p className="text-gray-600 mt-1 dark:text-slate-300">{krava.identifikacioniBroj}</p>
         </div>
         <button
           onClick={() => navigate(`/krave/${krava.id}/uredi`)}
@@ -72,23 +72,23 @@ export function DetaljiKrave() {
       {/* Osnovne informacije */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Status i osnovni podaci */}
-        <div className="lg:col-span-2 bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Osnovne informacije</h3>
+        <div className="lg:col-span-2 bg-white rounded-xl p-6 border border-gray-200 shadow-sm dark:bg-slate-900/50 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">Osnovne informacije</h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Pasmina</p>
-              <p className="text-lg font-semibold text-gray-900">{krava.pasmina}</p>
+            <div className="p-4 bg-gray-50 rounded-lg dark:bg-slate-950/40">
+              <p className="text-sm text-gray-600 dark:text-slate-300 mb-1">Pasmina</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-slate-100">{krava.pasmina}</p>
             </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Starost</p>
-              <p className="text-lg font-semibold text-gray-900">{formatNumber(krava.starost, { maximumFractionDigits: 0 })} god.</p>
+            <div className="p-4 bg-gray-50 rounded-lg dark:bg-slate-950/40">
+              <p className="text-sm text-gray-600 dark:text-slate-300 mb-1">Starost</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-slate-100">{formatNumber(krava.starost, { maximumFractionDigits: 0 })} god.</p>
             </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Težina</p>
-              <p className="text-lg font-semibold text-gray-900">{formatNumber(krava.tezina)} kg</p>
+            <div className="p-4 bg-gray-50 rounded-lg dark:bg-slate-950/40">
+              <p className="text-sm text-gray-600 dark:text-slate-300 mb-1">Težina</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-slate-100">{formatNumber(krava.tezina)} kg</p>
             </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Status</p>
+            <div className="p-4 bg-gray-50 rounded-lg dark:bg-slate-950/40">
+              <p className="text-sm text-gray-600 dark:text-slate-300 mb-1">Status</p>
               <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
                 ${krava.status === 'zdrava' ? 'bg-green-100 text-green-800' : 
                   krava.status === 'lijecenje' ? 'bg-red-100 text-red-800' : 
@@ -97,20 +97,20 @@ export function DetaljiKrave() {
                 {krava.status.charAt(0).toUpperCase() + krava.status.slice(1)}
               </span>
             </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Datum rođenja</p>
-              <p className="text-lg font-semibold text-gray-900">
+            <div className="p-4 bg-gray-50 rounded-lg dark:bg-slate-950/40">
+              <p className="text-sm text-gray-600 dark:text-slate-300 mb-1">Datum rođenja</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-slate-100">
                 {formatDate(krava.datumRodjenja)}
               </p>
             </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Prosječna proizvodnja</p>
-              <p className="text-lg font-semibold text-gray-900">{formatNumber(krava.prosjecnaProdukcija, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} L/dan</p>
+            <div className="p-4 bg-gray-50 rounded-lg dark:bg-slate-950/40">
+              <p className="text-sm text-gray-600 dark:text-slate-300 mb-1">Prosječna proizvodnja</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-slate-100">{formatNumber(krava.prosjecnaProdukcija, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} L/dan</p>
             </div>
           </div>
 
           {krava.napomene && (
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-950/30 dark:border-blue-800">
               <p className="text-sm font-medium text-blue-900 mb-2">Napomene:</p>
               <p className="text-sm text-blue-800">{krava.napomene}</p>
             </div>
@@ -119,28 +119,28 @@ export function DetaljiKrave() {
 
         {/* Brzi podaci */}
         <div className="space-y-4">
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm dark:bg-slate-900/50 dark:border-slate-700">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <Milk className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Zadnja proizvodnja</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-gray-600 dark:text-slate-300">Zadnja proizvodnja</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-slate-100">
                   {krava.zadnjaProdukcija !== undefined ? `${formatNumber(krava.zadnjaProdukcija, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} L` : 'N/A'}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm dark:bg-slate-900/50 dark:border-slate-700">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Zadnji pregled</p>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-sm text-gray-600 dark:text-slate-300">Zadnji pregled</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-slate-100">
                   {krava.zadnjiPregled 
                     ? formatDate(krava.zadnjiPregled)
                     : 'N/A'}
@@ -149,14 +149,14 @@ export function DetaljiKrave() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm dark:bg-slate-900/50 dark:border-slate-700">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <Activity className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Vakcinacija</p>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-sm text-gray-600 dark:text-slate-300">Vakcinacija</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-slate-100">
                   {krava.zadnjeVakcinisanje 
                     ? formatDate(krava.zadnjeVakcinisanje)
                     : 'N/A'}
@@ -168,10 +168,10 @@ export function DetaljiKrave() {
       </div>
 
       {/* Grafikon proizvodnje */}
-      <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Proizvodnja mlijeka - Posljednjih 7 dana</h3>
+      <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm dark:bg-slate-900/50 dark:border-slate-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">Proizvodnja mlijeka - Posljednjih 7 dana</h3>
         {chartData.length === 0 ? (
-          <div className="text-sm text-gray-600">Nema podataka o muži za ovu kravu.</div>
+          <div className="text-sm text-gray-600 dark:text-slate-300">Nema podataka o muži za ovu kravu.</div>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={chartData}>
@@ -180,8 +180,8 @@ export function DetaljiKrave() {
               <YAxis stroke="#6b7280" style={{ fontSize: '12px' }} />
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: '#fff', 
-                  border: '1px solid #e5e7eb',
+                  backgroundColor: isDarkMode ? '#0f172a' : '#fff', 
+                  border: `1px solid ${isDarkMode ? '#334155' : '#e5e7eb'}`,
                   borderRadius: '8px'
                 }}
               />
@@ -202,26 +202,26 @@ export function DetaljiKrave() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <button 
           onClick={() => navigate('/proizvodnja-mlijeka')}
-          className="p-6 bg-white border-2 border-gray-200 rounded-xl hover:border-green-500 hover:shadow-md transition-all text-left"
+          className="p-6 bg-white border-2 border-gray-200 rounded-xl hover:border-green-500 hover:shadow-md transition-all text-left dark:bg-slate-900/50 dark:border-slate-700 dark:hover:border-green-500"
         >
           <Milk className="w-8 h-8 text-green-600 mb-3" />
-          <h4 className="font-semibold text-gray-900 mb-1">Dodaj proizvodnju</h4>
-          <p className="text-sm text-gray-600">Evidentiraj dnevnu proizvodnju mlijeka</p>
+          <h4 className="font-semibold text-gray-900 dark:text-slate-100 mb-1">Dodaj proizvodnju</h4>
+          <p className="text-sm text-gray-600 dark:text-slate-300">Evidentiraj dnevnu proizvodnju mlijeka</p>
         </button>
 
         <button 
           onClick={() => navigate('/zdravlje-reprodukcija')}
-          className="p-6 bg-white border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:shadow-md transition-all text-left"
+          className="p-6 bg-white border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:shadow-md transition-all text-left dark:bg-slate-900/50 dark:border-slate-700 dark:hover:border-blue-500"
         >
           <Activity className="w-8 h-8 text-blue-600 mb-3" />
-          <h4 className="font-semibold text-gray-900 mb-1">Zdravstveni zapis</h4>
-          <p className="text-sm text-gray-600">Dodaj pregled ili liječenje</p>
+          <h4 className="font-semibold text-gray-900 dark:text-slate-100 mb-1">Zdravstveni zapis</h4>
+          <p className="text-sm text-gray-600 dark:text-slate-300">Dodaj pregled ili liječenje</p>
         </button>
 
-        <button className="p-6 bg-white border-2 border-gray-200 rounded-xl hover:border-purple-500 hover:shadow-md transition-all text-left">
+        <button className="p-6 bg-white border-2 border-gray-200 rounded-xl hover:border-purple-500 hover:shadow-md transition-all text-left dark:bg-slate-900/50 dark:border-slate-700 dark:hover:border-purple-500">
           <Weight className="w-8 h-8 text-purple-600 mb-3" />
-          <h4 className="font-semibold text-gray-900 mb-1">Ažuriraj težinu</h4>
-          <p className="text-sm text-gray-600">Unesi novu izmjerenu težinu</p>
+          <h4 className="font-semibold text-gray-900 dark:text-slate-100 mb-1">Ažuriraj težinu</h4>
+          <p className="text-sm text-gray-600 dark:text-slate-300">Unesi novu izmjerenu težinu</p>
         </button>
       </div>
     </div>

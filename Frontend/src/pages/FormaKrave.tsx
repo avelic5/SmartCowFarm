@@ -55,27 +55,27 @@ export function FormaKrave() {
       <div className="mb-8">
         <button
           onClick={() => navigate('/krave')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-slate-300 dark:hover:text-slate-100 mb-4"
         >
           <ArrowLeft className="w-5 h-5" />
           Nazad na listu
         </button>
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-slate-100">
           {jeIzmjena ? 'Uredi kravu' : 'Dodaj novu kravu'}
         </h1>
-        <p className="text-gray-600 mt-1">
+        <p className="text-gray-600 dark:text-slate-300 mt-1">
           {jeIzmjena ? 'Ažurirajte informacije o kravi' : 'Unesite detalje nove krave u stado'}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-gray-200 shadow-sm">
+      <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-gray-200 shadow-sm dark:bg-slate-900/50 dark:border-slate-700">
         <div className="p-6 space-y-6">
           {/* Osnove informacije */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Osnovne informacije</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">Osnovne informacije</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="identifikacioniBroj" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="identifikacioniBroj" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                   Identifikacioni broj *
                 </label>
                 <input
@@ -85,13 +85,13 @@ export function FormaKrave() {
                   value={formData.identifikacioniBroj}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:placeholder-slate-500"
                   placeholder="npr. BOS-001"
                 />
               </div>
 
               <div>
-                <label htmlFor="ime" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="ime" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                   Ime *
                 </label>
                 <input
@@ -101,13 +101,13 @@ export function FormaKrave() {
                   value={formData.ime}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:placeholder-slate-500"
                   placeholder="npr. Slavica"
                 />
               </div>
 
               <div>
-                <label htmlFor="pasmina" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="pasmina" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                   Pasmina *
                 </label>
                 <select
@@ -116,7 +116,7 @@ export function FormaKrave() {
                   value={formData.pasmina}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100"
                 >
                   <option value="">Odaberite pasminu</option>
                   <option value="Holštajn">Holštajn</option>
@@ -128,7 +128,7 @@ export function FormaKrave() {
               </div>
 
               <div>
-                <label htmlFor="datumRodjenja" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="datumRodjenja" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                   Datum rođenja *
                 </label>
                 <input
@@ -138,12 +138,12 @@ export function FormaKrave() {
                   value={formData.datumRodjenja}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100"
                 />
               </div>
 
               <div>
-                <label htmlFor="tezina" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="tezina" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                   Težina (kg) *
                 </label>
                 <input
@@ -155,13 +155,13 @@ export function FormaKrave() {
                   required
                   min="0"
                   step="0.1"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:placeholder-slate-500"
                   placeholder="npr. 650"
                 />
               </div>
 
               <div>
-                <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                   Status *
                 </label>
                 <select
@@ -170,7 +170,7 @@ export function FormaKrave() {
                   value={formData.status}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100"
                 >
                   <option value="zdrava">Zdrava</option>
                   <option value="lijecenje">Na liječenju</option>
@@ -182,10 +182,10 @@ export function FormaKrave() {
 
           {/* Informacije o proizvodnji */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Informacije o proizvodnji</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">Informacije o proizvodnji</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="prosjecnaProdukcija" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="prosjecnaProdukcija" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                   Prosječna proizvodnja (L/dan)
                 </label>
                 <input
@@ -196,7 +196,7 @@ export function FormaKrave() {
                   onChange={handleChange}
                   min="0"
                   step="0.1"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:placeholder-slate-500"
                   placeholder="npr. 32.5"
                 />
               </div>
@@ -205,7 +205,7 @@ export function FormaKrave() {
 
           {/* Napomene */}
           <div>
-            <label htmlFor="napomene" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="napomene" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
               Napomene
             </label>
             <textarea
@@ -214,24 +214,24 @@ export function FormaKrave() {
               value={formData.napomene}
               onChange={handleChange}
               rows={4}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:placeholder-slate-500"
               placeholder="Dodatne informacije..."
             />
           </div>
         </div>
 
         {/* Akcije */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-3 dark:bg-slate-950/40 dark:border-slate-700">
           <button
             type="button"
             onClick={() => navigate('/krave')}
-            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800/50"
           >
             Otkaži
           </button>
           <button
             type="submit"
-            className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg transition-all shadow-md hover:from-green-700 hover:to-blue-700"
+            className="flex items-center gap-2 px-6 py-2 bg-linear-to-r from-green-600 to-blue-600 text-white rounded-lg transition-all shadow-md hover:from-green-700 hover:to-blue-700"
           >
             <Save className="w-5 h-5" />
             {jeIzmjena ? 'Sačuvaj izmjene' : 'Dodaj kravu'}
