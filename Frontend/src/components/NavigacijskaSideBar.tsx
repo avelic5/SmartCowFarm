@@ -75,12 +75,12 @@ export function NavigacijskaSideBar({
   const location = useLocation();
   const { odjava } = useAuth();
 
-  const mobileVisibilityClass = mobileOpen ? 'flex' : 'hidden';
+  const mobileVisibilityClass = mobileOpen ? 'fixed inset-0 flex h-dvh' : 'hidden';
 
   return (
 	<aside
 		id="mobile-nav"
-    className={`static order-2 z-30 ${mobileVisibilityClass} w-full shrink-0 flex-col border-b border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 md:order-none md:flex md:sticky md:top-0 md:h-screen md:w-64 md:border-b-0 md:border-r`}
+    className={`${mobileVisibilityClass} z-30 w-full shrink-0 flex-col border-b border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 md:flex md:sticky md:top-0 md:h-screen md:w-64 md:border-b-0 md:border-r`}
 	>
       {/* Logo */}
       <div className="border-b border-gray-200 p-4 dark:border-slate-800 md:flex md:h-16 md:items-center md:px-6 md:py-0">
