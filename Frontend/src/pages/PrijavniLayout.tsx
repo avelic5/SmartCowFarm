@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { NavigacijskaSideBar } from '../components/NavigacijskaSideBar';
@@ -7,6 +7,17 @@ import { Zaglavlje } from '../components/Zaglavlje';
 export function PrijavniLayout() {
   const { prijavljenKorisnik } = useAuth();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isMobileNavOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isMobileNavOpen]);
 
   if (!prijavljenKorisnik) {
     return <Navigate to="/prijava" replace />;
@@ -19,7 +30,7 @@ export function PrijavniLayout() {
           mobileOpen={isMobileNavOpen}
           onRequestCloseMobile={() => setIsMobileNavOpen(false)}
         />
-        <div className="order-1 flex flex-1 flex-col overflow-hidden md:order-none">
+        <div className="order-1 flex flex-1 flex-col overflow-hidden md:order-0">
           <Zaglavlje
             isMobileNavOpen={isMobileNavOpen}
             onToggleMobileNav={() => setIsMobileNavOpen((open) => !open)}

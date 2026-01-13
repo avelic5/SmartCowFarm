@@ -24,16 +24,34 @@ function weekKey(d: Date): string {
   return `${year}-W${String(week).padStart(2, '0')}`;
 }
 
+function formatLiters(total: number): string {
+  if (!Number.isFinite(total)) return '0 L';
+  if (total >= 1000) return `${(total / 1000).toFixed(1)}k L`;
+  return `${total.toFixed(1)} L`;
+}
+
 export function ProizvodnaMlijeka() {
   const { isDarkMode } = useSettings();
   const { produkcijaMlijeka, krave } = useData();
 
-  const now = useMemo(() => Date.now(), []);
+  const effectiveNow = useMemo(() => {
+    const realNow = Date.now();
+    const newest = produkcijaMlijeka.reduce((max, p) => {
+      const t = parseIsoDate(p.datum);
+      return t > max ? t : max;
+    }, 0);
+
+    // If the dataset is old (e.g. seeded demo data), anchor time windows
+    // to the newest record so KPIs/charts don't appear "broken".
+    const twoDays = 2 * 24 * 60 * 60 * 1000;
+    if (newest > 0 && newest < realNow - twoDays) return newest;
+    return realNow;
+  }, [produkcijaMlijeka]);
 
   const last30 = useMemo(() => {
-    const cutoff = now - 30 * 24 * 60 * 60 * 1000;
+    const cutoff = effectiveNow - 30 * 24 * 60 * 60 * 1000;
     return produkcijaMlijeka.filter((p) => parseIsoDate(p.datum) >= cutoff);
-  }, [now, produkcijaMlijeka]);
+  }, [effectiveNow, produkcijaMlijeka]);
 
   const total30 = useMemo(() => last30.reduce((sum, p) => sum + (Number(p.litri) || 0), 0), [last30]);
   const cowsCount = krave.length || 1;
@@ -109,7 +127,7 @@ export function ProizvodnaMlijeka() {
   }, [krave, last30]);
 
   const kpi = useMemo(() => ([
-    { icon: Milk, label: 'Ukupno (30d)', value: `${(total30 / 1000).toFixed(1)}k L`, badge: `${last30.length} muža` },
+    { icon: Milk, label: 'Ukupno (30d)', value: formatLiters(total30), badge: `${last30.length} muža` },
     { icon: Droplet, label: 'Prosjek po grlu', value: `${avgPerCow.toFixed(1)} L`, badge: `Ukupno krava: ${krave.length}` },
     { icon: Gauge, label: 'Kvalitet mlijeka', value: '—', badge: 'Nema podataka' },
     { icon: TrendingUp, label: 'Trend sedmica', value: weekly.length ? `${weekly[weekly.length - 1].litri.toFixed(0)} L` : '—', badge: 'Posljednjih 5 sedmica' },

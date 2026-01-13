@@ -1,35 +1,52 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Filter, Download, Calendar } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Page } from '../App';
+import { api } from '../api';
+import type { MuzaDto, KravaDto } from '../api/dto';
 
 interface MilkProductionProps {
   onNavigate: (page: Page) => void;
 }
 
-const trendData = [
-  { date: 'Nov 30', total: 2780 },
-  { date: 'Dec 1', total: 2850 },
-  { date: 'Dec 2', total: 2920 },
-  { date: 'Dec 3', total: 2780 },
-  { date: 'Dec 4', total: 2950 },
-  { date: 'Dec 5', total: 3100 },
-  { date: 'Dec 6', total: 3050 },
-  { date: 'Dec 7', total: 3200 },
-];
-
-const sessions = [
-  { id: 1, dateTime: '2025-12-07 06:15', cow: 'Bella (C001)', quantity: 17.3, duration: 8.5, avgFlow: 2.04, temp: 37.2, station: 'Station 1' },
-  { id: 2, dateTime: '2025-12-07 06:22', cow: 'Daisy (C002)', quantity: 14.8, duration: 7.8, avgFlow: 1.90, temp: 37.1, station: 'Station 2' },
-  { id: 3, dateTime: '2025-12-07 06:28', cow: 'Rosie (C004)', quantity: 16.2, duration: 8.1, avgFlow: 2.00, temp: 37.3, station: 'Station 1' },
-  { id: 4, dateTime: '2025-12-07 06:35', cow: 'Buttercup (C006)', quantity: 15.5, duration: 7.9, avgFlow: 1.96, temp: 37.2, station: 'Station 3' },
-  { id: 5, dateTime: '2025-12-07 16:30', cow: 'Bella (C001)', quantity: 16.9, duration: 8.2, avgFlow: 2.06, temp: 37.1, station: 'Station 1' },
-  { id: 6, dateTime: '2025-12-07 16:38', cow: 'Daisy (C002)', quantity: 13.9, duration: 7.5, avgFlow: 1.85, temp: 37.0, station: 'Station 2' },
-];
-
 export function MilkProduction({ onNavigate }: MilkProductionProps) {
   const [dateRange, setDateRange] = useState('7days');
   const [selectedCow, setSelectedCow] = useState('all');
+  const [muze, setMuze] = useState<MuzaDto[] | null>(null);
+  const [krave, setKrave] = useState<KravaDto[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    Promise.all([api.muze.list(), api.krave.list()])
+      .then(([m, k]) => { if (mounted) { setMuze(m); setKrave(k); }})
+      .catch(e => setError(e?.message || 'Greška pri učitavanju muža.'));
+    return () => { mounted = false; };
+  }, []);
+
+  const cowLabel = useMemo(() => {
+    const map = new Map<number, string>();
+    (krave || []).forEach(k => map.set(k.idKrave, `${k.oznakaKrave}`));
+    return map;
+  }, [krave]);
+
+  const filteredSessions = useMemo(() => {
+    let sessions = (muze || []).slice();
+    if (selectedCow !== 'all') {
+      const id = Number(selectedCow);
+      sessions = sessions.filter(s => s.idKrave === id);
+    }
+    return sessions.sort((a, b) => a.datum.localeCompare(b.datum));
+  }, [muze, selectedCow]);
+
+  const trendData = useMemo(() => {
+    const totals = new Map<string, number>();
+    (filteredSessions).forEach(s => {
+      const day = s.datum.split('T')[0] || s.datum;
+      totals.set(day, (totals.get(day) || 0) + (s.kolicinaLitara || 0));
+    });
+    return Array.from(totals.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([date, total]) => ({ date, total }));
+  }, [filteredSessions]);
 
   return (
     <div className="p-8 space-y-6">
@@ -70,10 +87,9 @@ export function MilkProduction({ onNavigate }: MilkProductionProps) {
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             >
               <option value="all">All Cows</option>
-              <option value="C001">Bella (C001)</option>
-              <option value="C002">Daisy (C002)</option>
-              <option value="C004">Rosie (C004)</option>
-              <option value="C006">Buttercup (C006)</option>
+              {(krave || []).map(k => (
+                <option key={k.idKrave} value={k.idKrave}>{k.oznakaKrave}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -83,7 +99,7 @@ export function MilkProduction({ onNavigate }: MilkProductionProps) {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
           <p className="text-gray-600 mb-1">Today's Total</p>
-          <h3 className="text-gray-900 mb-2">3,200 L</h3>
+          <h3 className="text-gray-900 mb-2">{trendData.reduce((s, d) => s + d.total, 0).toFixed(0)} L</h3>
           <p className="text-green-600">+4.8% vs yesterday</p>
         </div>
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
@@ -149,15 +165,16 @@ export function MilkProduction({ onNavigate }: MilkProductionProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {sessions.map((session) => (
-                <tr key={session.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 text-gray-900">{session.dateTime}</td>
-                  <td className="px-6 py-4 text-gray-900">{session.cow}</td>
-                  <td className="px-6 py-4 text-gray-900">{session.quantity}</td>
-                  <td className="px-6 py-4 text-gray-600">{session.duration}</td>
-                  <td className="px-6 py-4 text-gray-600">{session.avgFlow}</td>
-                  <td className="px-6 py-4 text-gray-600">{session.temp}</td>
-                  <td className="px-6 py-4 text-gray-600">{session.station}</td>
+              {error && (<tr><td className="px-6 py-4 text-red-600" colSpan={7}>{error}</td></tr>)}
+              {(filteredSessions || []).map((m) => (
+                <tr key={m.idMuze} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4 text-gray-900">{`${m.datum} ${m.vrijemePocetka}`}</td>
+                  <td className="px-6 py-4 text-gray-900">{cowLabel.get(m.idKrave) || m.idKrave}</td>
+                  <td className="px-6 py-4 text-gray-900">{m.kolicinaLitara}</td>
+                  <td className="px-6 py-4 text-gray-600">{m.vrijemeZavrsretka && m.vrijemePocetka ? '' : '—'}</td>
+                  <td className="px-6 py-4 text-gray-600">{m.prosjecanProtokLMin ?? m.prosjecanProtokLMin}</td>
+                  <td className="px-6 py-4 text-gray-600">{m.temperaturaMlijeka ?? '—'}</td>
+                  <td className="px-6 py-4 text-gray-600">{m.nacinUnosa ?? '—'}</td>
                 </tr>
               ))}
             </tbody>

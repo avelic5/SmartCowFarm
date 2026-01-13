@@ -11,7 +11,8 @@ import {
   FileText,
   Users,
   Settings,
-  LogOut
+  LogOut,
+  X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -75,23 +76,32 @@ export function NavigacijskaSideBar({
   const location = useLocation();
   const { odjava } = useAuth();
 
-  const mobileVisibilityClass = mobileOpen ? 'flex' : 'hidden';
+  const mobileVisibilityClass = mobileOpen ? 'fixed inset-0 flex h-dvh' : 'hidden';
 
   return (
 	<aside
 		id="mobile-nav"
-    className={`static order-2 z-30 ${mobileVisibilityClass} w-full shrink-0 flex-col border-b border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 md:order-none md:flex md:sticky md:top-0 md:h-screen md:w-64 md:border-b-0 md:border-r`}
+    className={`${mobileVisibilityClass} z-50 w-full shrink-0 flex-col border-b border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 md:flex md:sticky md:top-0 md:h-screen md:w-64 md:border-b-0 md:border-r`}
 	>
       {/* Logo */}
-      <div className="border-b border-gray-200 p-4 dark:border-slate-800 md:flex md:h-16 md:items-center md:px-6 md:py-0">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-xl flex items-center justify-center">
+      <div className="sticky top-0 z-10 border-b border-gray-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 md:static md:z-auto md:flex md:h-16 md:items-center md:bg-transparent md:p-0 md:px-6 md:py-0">
+        <div className="flex items-center justify-between gap-3">
+          <div className="w-10 h-10 bg-linear-to-br from-green-500 to-blue-600 rounded-xl flex items-center justify-center">
             <Milk className="w-6 h-6 text-white" />
           </div>
           <div>
             <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100">Pametna Farma</h2>
             <p className="text-xs text-gray-500 dark:text-slate-400">AI Sistem</p>
           </div>
+
+          <button
+            type="button"
+            onClick={onRequestCloseMobile}
+            aria-label="Zatvori navigaciju"
+            className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-gray-100 transition-colors dark:hover:bg-slate-800 md:hidden"
+          >
+            <X className="h-6 w-6 text-gray-700 dark:text-slate-200" />
+          </button>
         </div>
       </div>
 

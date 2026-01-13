@@ -1,7 +1,6 @@
 # Build results
 bin/
 obj/
-
 # IDE files
 .vs/
 .vscode/

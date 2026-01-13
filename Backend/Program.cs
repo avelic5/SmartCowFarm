@@ -16,23 +16,11 @@ public class Program
                 o.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
             });
 
-        // **DODANO: CORS services OVJJE prije Build()**
         builder.Services.AddCors(options =>
         {
-            options.AddPolicy("AllowFrontend", policy =>
-            {
-                policy.SetIsOriginAllowed(origin =>
-                {
-                    return origin.StartsWith("http://localhost:") ||
-                           origin.StartsWith("https://localhost:") ||
-                           origin == "https://smart-cow-farm.vercel.app"; // vercel production
-                })
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
-            });
+            options.AddDefaultPolicy(policy =>
+                policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
         });
-
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
 
@@ -51,8 +39,7 @@ public class Program
 
         app.UseHttpsRedirection();
 
-        // **DODANO: Ovo omogućuje CORS middleware**
-        app.UseCors("AllowFrontend"); // <-- VAŽNO!
+        app.UseCors();
 
         app.UseAuthorization();
 

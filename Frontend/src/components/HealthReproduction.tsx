@@ -1,15 +1,27 @@
 import { Heart, Activity, TrendingUp } from 'lucide-react';
 import { Page } from '../App';
+import { useEffect, useState } from 'react';
+import { api } from '../api';
+import type { ZdravstveniSlucajDto, KravaDto } from '../api/dto';
 
 interface HealthReproductionProps {
   onNavigate: (page: Page) => void;
 }
 
-const healthIncidents = [
-  { id: 1, cow: 'Clover (C005)', date: '2025-12-06', diagnosis: 'Mild Mastitis', status: 'treatment', severity: 'medium' },
-  { id: 2, cow: 'Luna (C003)', date: '2025-12-04', diagnosis: 'Routine Check - Pregnant', status: 'monitoring', severity: 'low' },
-  { id: 3, cow: 'Bella (C001)', date: '2025-11-28', diagnosis: 'Hoof Care', status: 'resolved', severity: 'low' },
-];
+export function HealthReproduction({ onNavigate }: HealthReproductionProps) {
+  const [slucajevi, setSlucajevi] = useState<ZdravstveniSlucajDto[] | null>(null);
+  const [krave, setKrave] = useState<KravaDto[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    Promise.all([api.zdravstveniSlucajevi.list(), api.krave.list()])
+      .then(([s, k]) => { if (mounted) { setSlucajevi(s); setKrave(k); } })
+      .catch(e => setError(e?.message || 'Greška pri učitavanju zdravstvenih slučajeva.'));
+    return () => { mounted = false; };
+  }, []);
+
+  const kravaNaziv = (id: number) => (krave || []).find(k => k.idKrave === id)?.oznakaKrave || `Krava ${id}`;
 
 const estrusDetections = [
   { id: 1, cow: 'Daisy (C002)', date: '2025-12-05', confidence: 95, action: 'AI scheduled', status: 'pending' },
@@ -38,7 +50,6 @@ const severityColors = {
   high: 'bg-red-100 text-red-700',
 };
 
-export function HealthReproduction({ onNavigate }: HealthReproductionProps) {
   return (
     <div className="p-8 space-y-6">
       {/* Header */}
@@ -74,36 +85,34 @@ export function HealthReproduction({ onNavigate }: HealthReproductionProps) {
         ))}
       </div>
 
-      {/* Health Incidents */}
+      {/* Health Incidents (from API) */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Heart className="w-5 h-5 text-red-500" />
             <h3 className="text-gray-900">Health Incidents</h3>
           </div>
-          <span className="text-gray-600">{healthIncidents.length} active cases</span>
+          <span className="text-gray-600">{slucajevi?.length ?? 0} cases</span>
         </div>
         <div className="divide-y divide-gray-200">
-          {healthIncidents.map((incident) => (
-            <div key={incident.id} className="p-6 hover:bg-gray-50 transition-colors">
+          {error && <div className="p-6 text-red-600">{error}</div>}
+          {(slucajevi || []).map((s) => (
+            <div key={s.idSlucaja} className="p-6 hover:bg-gray-50 transition-colors">
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <h4 className="text-gray-900 mb-1">{incident.cow}</h4>
-                  <p className="text-gray-600">{incident.date}</p>
+                  <h4 className="text-gray-900 mb-1">{kravaNaziv(s.idKrave)}</h4>
+                  <p className="text-gray-600">{s.datumOtvaranja}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`px-3 py-1 rounded-full ${severityColors[incident.severity as keyof typeof severityColors]}`}>
-                    {incident.severity === 'low' ? 'Low' : incident.severity === 'medium' ? 'Medium' : 'High'}
-                  </span>
-                  <span className={`px-3 py-1 rounded-full ${statusColors[incident.status as keyof typeof statusColors]}`}>
-                    {incident.status.charAt(0).toUpperCase() + incident.status.slice(1)}
+                  <span className={`px-3 py-1 rounded-full ${s.statusSlucaja === 'PodNadzorom' ? 'bg-amber-100 text-amber-700' : s.statusSlucaja === 'Aktivna' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                    {s.statusSlucaja}
                   </span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-1 h-8 bg-red-500 rounded-full"></div>
                 <div>
-                  <p className="text-gray-900">{incident.diagnosis}</p>
+                  <p className="text-gray-900">{s.dijagnoza || s.razlogOtvaranja}</p>
                 </div>
               </div>
             </div>

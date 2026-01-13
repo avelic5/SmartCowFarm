@@ -1,94 +1,29 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, CheckCircle, Filter } from 'lucide-react';
 import { Page } from '../App';
+import { api } from '../api';
+import type { UpozorenjeDto } from '../api/dto';
 
 interface AlertsProps {
   onNavigate: (page: Page) => void;
 }
 
-interface Alert {
-  id: number;
-  severity: 'info' | 'warning' | 'critical';
-  title: string;
-  message: string;
-  time: string;
-  source: 'AI' | 'Sensor' | 'Milk';
-  relatedTo: string;
-  status: 'new' | 'in-progress' | 'resolved';
+type Severity = 'info' | 'warning' | 'critical';
+type UiStatus = 'new' | 'in-progress' | 'resolved';
+
+function nivoToSeverity(nivo: UpozorenjeDto['nivoUpozorenja']): Severity {
+  switch (nivo) {
+    case 'Kriticno': return 'critical';
+    case 'Upozorenje': return 'warning';
+    default: return 'info';
+  }
 }
 
-const alertsData: Alert[] = [
-  { 
-    id: 1, 
-    severity: 'critical', 
-    title: 'High Temperature Alert', 
-    message: 'Zone C2 temperature exceeded threshold (24.3°C)', 
-    time: '30 min ago', 
-    source: 'Sensor', 
-    relatedTo: 'Zone C2', 
-    status: 'new' 
-  },
-  { 
-    id: 2, 
-    severity: 'critical', 
-    title: 'Elevated NH₃ Levels', 
-    message: 'Ammonia levels in Zone C2 at 25 ppm (threshold: 20 ppm)', 
-    time: '1 hour ago', 
-    source: 'Sensor', 
-    relatedTo: 'Zone C2', 
-    status: 'in-progress' 
-  },
-  { 
-    id: 3, 
-    severity: 'warning', 
-    title: 'Milk Quality - SCC Elevated', 
-    message: 'Somatic cell count slightly elevated in Bella (C001)', 
-    time: '2 hours ago', 
-    source: 'Milk', 
-    relatedTo: 'Bella (C001)', 
-    status: 'new' 
-  },
-  { 
-    id: 4, 
-    severity: 'warning', 
-    title: 'Low Milk Output', 
-    message: 'Clover (C005) produced 15.2L, below average (expected: 30L)', 
-    time: '3 hours ago', 
-    source: 'AI', 
-    relatedTo: 'Clover (C005)', 
-    status: 'in-progress' 
-  },
-  { 
-    id: 5, 
-    severity: 'info', 
-    title: 'Estrus Detection', 
-    message: 'AI detected estrus behavior in Daisy (C002) with 95% confidence', 
-    time: '5 hours ago', 
-    source: 'AI', 
-    relatedTo: 'Daisy (C002)', 
-    status: 'in-progress' 
-  },
-  { 
-    id: 6, 
-    severity: 'warning', 
-    title: 'Temperature Fluctuation', 
-    message: 'Zone B1 temperature increased by 2°C in the last hour', 
-    time: '6 hours ago', 
-    source: 'Sensor', 
-    relatedTo: 'Zone B1', 
-    status: 'resolved' 
-  },
-  { 
-    id: 7, 
-    severity: 'info', 
-    title: 'Vaccination Due', 
-    message: 'Routine vaccinations due for 5 cows in the next 7 days', 
-    time: '1 day ago', 
-    source: 'AI', 
-    relatedTo: 'Multiple cows', 
-    status: 'new' 
-  },
-];
+function statusToUi(status: UpozorenjeDto['statusUpozorenja']): UiStatus {
+  if (status === 'U_Obradi') return 'in-progress';
+  if (status === 'Zavrsen') return 'resolved';
+  return 'new';
+}
 
 const severityConfig = {
   critical: { color: 'bg-red-100 text-red-700 border-red-200', icon: 'bg-red-500' },
@@ -106,24 +41,39 @@ export function Alerts({ onNavigate }: AlertsProps) {
   const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
-  const [alerts, setAlerts] = useState<Alert[]>(alertsData);
+  const [alerts, setAlerts] = useState<UpozorenjeDto[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.upozorenja.list()
+      .then(setAlerts)
+      .catch(e => setError(e?.message || 'Greška pri učitavanju upozorenja.'));
+  }, []);
 
   const filteredAlerts = alerts.filter(alert => {
-    const matchesSeverity = severityFilter === 'all' || alert.severity === severityFilter;
-    const matchesStatus = statusFilter === 'all' || alert.status === statusFilter;
-    const matchesSource = sourceFilter === 'all' || alert.source === sourceFilter;
+    const matchesSeverity = severityFilter === 'all' || nivoToSeverity(alert.nivoUpozorenja) === severityFilter;
+    const matchesStatus = statusFilter === 'all' || statusToUi(alert.statusUpozorenja) === statusFilter;
+    const matchesSource = sourceFilter === 'all' || alert.tipUpozorenja === sourceFilter;
     return matchesSeverity && matchesStatus && matchesSource;
   });
 
-  const updateAlertStatus = (id: number, newStatus: Alert['status']) => {
-    setAlerts(alerts.map(alert => 
-      alert.id === id ? { ...alert, status: newStatus } : alert
-    ));
+  const updateAlertStatus = (id: number, newStatus: UiStatus) => {
+    const a = alerts.find(a => a.idUpozorenja === id);
+    if (!a) return;
+    const map: Record<UiStatus, UpozorenjeDto['statusUpozorenja']> = {
+      'new': 'Poslan',
+      'in-progress': 'U_Obradi',
+      'resolved': 'Zavrsen',
+    };
+    const payload: UpozorenjeDto = { ...a, statusUpozorenja: map[newStatus] };
+    api.upozorenja.update(id, payload)
+      .then(() => setAlerts(prev => prev.map(x => x.idUpozorenja === id ? payload : x)))
+      .catch(e => setError(e?.message || 'Neuspješno ažuriranje upozorenja.'));
   };
 
-  const criticalCount = alerts.filter(a => a.severity === 'critical' && a.status !== 'resolved').length;
-  const warningCount = alerts.filter(a => a.severity === 'warning' && a.status !== 'resolved').length;
-  const newCount = alerts.filter(a => a.status === 'new').length;
+  const criticalCount = alerts.filter(a => nivoToSeverity(a.nivoUpozorenja) === 'critical' && statusToUi(a.statusUpozorenja) !== 'resolved').length;
+  const warningCount = alerts.filter(a => nivoToSeverity(a.nivoUpozorenja) === 'warning' && statusToUi(a.statusUpozorenja) !== 'resolved').length;
+  const newCount = alerts.filter(a => statusToUi(a.statusUpozorenja) === 'new').length;
 
   return (
     <div className="p-8 space-y-6">
@@ -218,11 +168,14 @@ export function Alerts({ onNavigate }: AlertsProps) {
 
       {/* Alerts List */}
       <div className="space-y-4">
+        {error && (<div className="p-4 text-red-600">{error}</div>)}
         {filteredAlerts.map((alert) => {
-          const config = severityConfig[alert.severity];
+          const sev = nivoToSeverity(alert.nivoUpozorenja);
+          const config = severityConfig[sev];
+          const uiStatus = statusToUi(alert.statusUpozorenja);
           return (
             <div 
-              key={alert.id}
+              key={alert.idUpozorenja}
               className={`bg-white rounded-xl p-6 border-l-4 ${config.color} shadow-sm hover:shadow-md transition-all`}
             >
               <div className="flex items-start gap-4">
@@ -234,36 +187,35 @@ export function Alerts({ onNavigate }: AlertsProps) {
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <div className="flex items-center gap-3 mb-1">
-                        <h4 className="text-gray-900">{alert.title}</h4>
-                        <span className={`px-3 py-1 rounded-full text-xs ${statusColors[alert.status]}`}>
-                          {alert.status === 'in-progress' ? 'In Progress' : 
-                           alert.status.charAt(0).toUpperCase() + alert.status.slice(1)}
+                        <h4 className="text-gray-900">{alert.opis}</h4>
+                        <span className={`px-3 py-1 rounded-full text-xs ${statusColors[uiStatus]}`}>
+                          {uiStatus === 'in-progress' ? 'In Progress' : uiStatus.charAt(0).toUpperCase() + uiStatus.slice(1)}
                         </span>
                       </div>
-                      <p className="text-gray-600 mb-2">{alert.message}</p>
+                      <p className="text-gray-600 mb-2">{alert.razlogAktiviranja}</p>
                       <div className="flex items-center gap-4 text-gray-500">
-                        <span>{alert.time}</span>
+                        <span>{alert.vrijemeDetekcije}</span>
                         <span>•</span>
-                        <span>Source: {alert.source}</span>
+                        <span>Source: {alert.tipUpozorenja}</span>
                         <span>•</span>
-                        <span>{alert.relatedTo}</span>
+                        <span>{alert.idKrave ? `Krava #${alert.idKrave}` : alert.idSenzora ? `Senzor #${alert.idSenzora}` : '-'}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Action buttons */}
                   <div className="mt-4 flex gap-2">
-                    {alert.status !== 'in-progress' && alert.status !== 'resolved' && (
+                    {uiStatus !== 'in-progress' && uiStatus !== 'resolved' && (
                       <button
-                        onClick={() => updateAlertStatus(alert.id, 'in-progress')}
+                        onClick={() => updateAlertStatus(alert.idUpozorenja, 'in-progress')}
                         className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
                       >
                         Start Working
                       </button>
                     )}
-                    {alert.status !== 'resolved' && (
+                    {uiStatus !== 'resolved' && (
                       <button
-                        onClick={() => updateAlertStatus(alert.id, 'resolved')}
+                        onClick={() => updateAlertStatus(alert.idUpozorenja, 'resolved')}
                         className="px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors flex items-center gap-1"
                       >
                         <CheckCircle className="w-4 h-4" />
