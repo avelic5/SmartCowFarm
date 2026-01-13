@@ -8,17 +8,13 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        //jedan nacin za system enviroment variables
-        //var DatabaseApiKey = builder.Configuration["DatabaseConnectionString"];
-        //DotNetEnv.Env.Load(); //ucitavamo env file
-        //var DatabaseApiKey = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
 
         // Add services to the container.
         builder.Services.AddControllers()
-    .AddJsonOptions(o =>
-    {
-        o.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-    });
+            .AddJsonOptions(o =>
+            {
+                o.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+            });
 
         builder.Services.AddCors(options =>
         {
@@ -28,12 +24,9 @@ public class Program
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
 
-        //baza
+        // baza
         builder.Services.AddDbContext<SmartCowFarmDatabaseContext>(
-        options => 
-        
-        //options.UseNpgsql(DatabaseApiKey)
-        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+            options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
         );
 
         var app = builder.Build();
@@ -46,10 +39,9 @@ public class Program
 
         app.UseHttpsRedirection();
 
-    app.UseCors();
+        app.UseCors();
 
         app.UseAuthorization();
-
 
         app.MapControllers();
 

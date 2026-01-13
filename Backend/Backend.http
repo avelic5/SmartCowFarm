@@ -16,13 +16,13 @@ POST {{Backend_HostAddress}}/api/korisnik
 Content-Type: application/json
 
 {
-  "ime": "Mirza",
-  "prezime": "Hodzic",
+  "ime": "MIRZA",
+  "prezime": "HODZIC",
   "radnoMjesto": "Veterinar",
-  "korisnickoIme": "mirza.h",
-  "hashLozinke": "OVDJE_HASH",
-  "telefon": "+38761123456",
-  "email": "mirza@example.com",
+  "korisnickoIme": "hodzicmirza",
+  "hashLozinke": "hodzicmirza",
+  "telefon": "+38762075029",
+  "email": "hodzic04mirza@gmail.com",
   "datumZaposlenja": "2025-12-14",
   "odjel": "Farmer",         
   "statusNaloga": "Aktivan", 

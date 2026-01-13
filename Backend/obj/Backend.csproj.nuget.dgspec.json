@@ -1,26 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "/home/avelic5/Desktop/Projekti/SmartCowFarm/Backend/Backend.csproj": {}
+    "/home/kingpin/Desktop/SmartCowFarm/Backend/Backend.csproj": {}
   },
   "projects": {
-    "/home/avelic5/Desktop/Projekti/SmartCowFarm/Backend/Backend.csproj": {
+    "/home/kingpin/Desktop/SmartCowFarm/Backend/Backend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/avelic5/Desktop/Projekti/SmartCowFarm/Backend/Backend.csproj",
+        "projectUniqueName": "/home/kingpin/Desktop/SmartCowFarm/Backend/Backend.csproj",
         "projectName": "Backend",
-        "projectPath": "/home/avelic5/Desktop/Projekti/SmartCowFarm/Backend/Backend.csproj",
-        "packagesPath": "/home/avelic5/.nuget/packages/",
-        "outputPath": "/home/avelic5/Desktop/Projekti/SmartCowFarm/Backend/obj/",
+        "projectPath": "/home/kingpin/Desktop/SmartCowFarm/Backend/Backend.csproj",
+        "packagesPath": "/home/kingpin/.nuget/packages/",
+        "outputPath": "/home/kingpin/Desktop/SmartCowFarm/Backend/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/avelic5/.nuget/NuGet/NuGet.Config"
+          "/home/kingpin/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "/usr/lib/dotnet/library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -99,7 +98,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.100/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.101/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
