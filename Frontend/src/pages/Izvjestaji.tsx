@@ -34,6 +34,21 @@ export function Izvjestaji() {
   const { krave, produkcijaMlijeka } = useData();
   const { isDarkMode } = useSettings();
 
+  const effectiveEndMs = useMemo(() => {
+    const now = Date.now();
+    const newest = produkcijaMlijeka.reduce((max, p) => {
+      const t = dateToLocalMidnightMs(p.datum);
+      return Number.isNaN(t) ? max : Math.max(max, t);
+    }, 0);
+
+    const twoDays = 2 * 24 * 60 * 60 * 1000;
+    const anchor = newest > 0 && newest < now - twoDays ? newest : now;
+
+    const end = new Date(anchor);
+    end.setHours(23, 59, 59, 999);
+    return end.getTime();
+  }, [produkcijaMlijeka]);
+
   const healthSplit = useMemo(() => ([
     { name: 'Zdrave', value: krave.filter(k => k.status === 'zdrava').length, color: '#10b981' },
     { name: 'Manji problemi', value: krave.filter(k => k.status === 'praćenje').length, color: '#f59e0b' },
@@ -46,8 +61,7 @@ export function Izvjestaji() {
   );
 
   const rangeWindow = useMemo(() => {
-    const end = new Date();
-    end.setHours(23, 59, 59, 999);
+    const end = new Date(effectiveEndMs);
     const start = new Date(end);
 
     if (range === 'last-90') {
@@ -61,7 +75,7 @@ export function Izvjestaji() {
 
     start.setHours(0, 0, 0, 0);
     return { startMs: start.getTime(), endMs: end.getTime() };
-  }, [range]);
+  }, [effectiveEndMs, range]);
 
   const productionInRange = useMemo(() => {
     return produkcijaMlijeka.filter((p) => {

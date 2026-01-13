@@ -24,6 +24,12 @@ function weekKey(d: Date): string {
   return `${year}-W${String(week).padStart(2, '0')}`;
 }
 
+function formatLiters(total: number): string {
+  if (!Number.isFinite(total)) return '0 L';
+  if (total >= 1000) return `${(total / 1000).toFixed(1)}k L`;
+  return `${total.toFixed(1)} L`;
+}
+
 export function ProizvodnaMlijeka() {
   const { isDarkMode } = useSettings();
   const { produkcijaMlijeka, krave } = useData();
@@ -121,7 +127,7 @@ export function ProizvodnaMlijeka() {
   }, [krave, last30]);
 
   const kpi = useMemo(() => ([
-    { icon: Milk, label: 'Ukupno (30d)', value: `${(total30 / 1000).toFixed(1)}k L`, badge: `${last30.length} muža` },
+    { icon: Milk, label: 'Ukupno (30d)', value: formatLiters(total30), badge: `${last30.length} muža` },
     { icon: Droplet, label: 'Prosjek po grlu', value: `${avgPerCow.toFixed(1)} L`, badge: `Ukupno krava: ${krave.length}` },
     { icon: Gauge, label: 'Kvalitet mlijeka', value: '—', badge: 'Nema podataka' },
     { icon: TrendingUp, label: 'Trend sedmica', value: weekly.length ? `${weekly[weekly.length - 1].litri.toFixed(0)} L` : '—', badge: 'Posljednjih 5 sedmica' },
