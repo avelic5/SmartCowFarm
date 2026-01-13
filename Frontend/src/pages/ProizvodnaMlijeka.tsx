@@ -28,12 +28,24 @@ export function ProizvodnaMlijeka() {
   const { isDarkMode } = useSettings();
   const { produkcijaMlijeka, krave } = useData();
 
-  const now = useMemo(() => Date.now(), []);
+  const effectiveNow = useMemo(() => {
+    const realNow = Date.now();
+    const newest = produkcijaMlijeka.reduce((max, p) => {
+      const t = parseIsoDate(p.datum);
+      return t > max ? t : max;
+    }, 0);
+
+    // If the dataset is old (e.g. seeded demo data), anchor time windows
+    // to the newest record so KPIs/charts don't appear "broken".
+    const twoDays = 2 * 24 * 60 * 60 * 1000;
+    if (newest > 0 && newest < realNow - twoDays) return newest;
+    return realNow;
+  }, [produkcijaMlijeka]);
 
   const last30 = useMemo(() => {
-    const cutoff = now - 30 * 24 * 60 * 60 * 1000;
+    const cutoff = effectiveNow - 30 * 24 * 60 * 60 * 1000;
     return produkcijaMlijeka.filter((p) => parseIsoDate(p.datum) >= cutoff);
-  }, [now, produkcijaMlijeka]);
+  }, [effectiveNow, produkcijaMlijeka]);
 
   const total30 = useMemo(() => last30.reduce((sum, p) => sum + (Number(p.litri) || 0), 0), [last30]);
   const cowsCount = krave.length || 1;
