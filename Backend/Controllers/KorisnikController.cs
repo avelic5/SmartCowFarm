@@ -1,6 +1,7 @@
 using Backend.Data;
 using Backend.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,10 +11,12 @@ namespace Backend.Controllers
     [ApiController]
     public class KorisnikController : ControllerBase
     {
+        private readonly IPasswordHasher<Korisnik> passwordHasher;
         private readonly SmartCowFarmDatabaseContext baza;
         public KorisnikController(SmartCowFarmDatabaseContext context)
         {
             baza = context;
+            passwordHasher = new PasswordHasher<Korisnik>();
         }
         //HTTP BASIC
         [HttpGet]
@@ -41,8 +44,8 @@ namespace Backend.Controllers
         {
             if(noviKorisnik == null)
                 return BadRequest();
-            
 
+            noviKorisnik.HashLozinke=passwordHasher.HashPassword(noviKorisnik,noviKorisnik.HashLozinke);
             baza.Korisnici.Add(noviKorisnik);
             await baza.SaveChangesAsync();
 
@@ -58,6 +61,11 @@ namespace Backend.Controllers
             
             if(trazeniKorisnik==null) return NotFound();
 
+            if (!string.IsNullOrWhiteSpace(noviKorisnik.HashLozinke))
+            {
+                trazeniKorisnik.HashLozinke= passwordHasher.HashPassword(noviKorisnik, noviKorisnik.HashLozinke);
+            }
+            
             //kraci nacin za mijenjane vrijednosti u varijablama
             baza.Entry(trazeniKorisnik).CurrentValues.SetValues(noviKorisnik); 
 
@@ -78,5 +86,15 @@ namespace Backend.Controllers
 
             return NoContent();
         }
+
+        /*
+        // DODATNE FUNKCIONALNOSTI
+        [HttpPost("{id}/autentifikuj")]
+        public async Task<IActionResult> Autentifikuj(int id, [FromBody] Korisnik korisnikZaAutentifikaciju)
+        {
+            var korisnikIzBaze = baza.Korisnici.FindAsync(id);
+            if(korisnikIzBaze == null || korisnikIzBaze.Status != "Aktivan")
+        }
+        */
     }
 }
