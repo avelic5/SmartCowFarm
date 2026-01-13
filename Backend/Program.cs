@@ -20,8 +20,11 @@ public class Program
         o.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 
-
-        builder.Services.AddControllers();
+        builder.Services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(policy =>
+                policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+        });
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
 
@@ -42,6 +45,8 @@ public class Program
         }
 
         app.UseHttpsRedirection();
+
+    app.UseCors();
 
         app.UseAuthorization();
 

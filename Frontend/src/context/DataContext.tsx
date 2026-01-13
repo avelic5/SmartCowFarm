@@ -115,13 +115,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     const load = async () => {
       try {
-        const [kraveRes, muzeRes, upozRes, zadaciRes, slucajeviRes] = await Promise.all([
+        const results = await Promise.allSettled([
           api.krave.list(),
           api.muze.list(),
           api.upozorenja.list(),
           api.zadaci.list(),
           api.zdravstveniSlucajevi.list(),
         ]);
+
+        const kraveRes = results[0].status === 'fulfilled' ? results[0].value : [];
+        const muzeRes = results[1].status === 'fulfilled' ? results[1].value : [];
+        const upozRes = results[2].status === 'fulfilled' ? results[2].value : [];
+        const zadaciRes = results[3].status === 'fulfilled' ? results[3].value : [];
+        const slucajeviRes = results[4].status === 'fulfilled' ? results[4].value : [];
+
+        for (const r of results) {
+          if (r.status === 'rejected') console.error(r.reason);
+        }
 
         if (cancelled) return;
 

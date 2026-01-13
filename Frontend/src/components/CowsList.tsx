@@ -1,37 +1,28 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Search, Filter, Plus, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Page } from '../App';
+import { api } from '../api';
+import type { KravaDto, UpozorenjeDto } from '../api/dto';
 
 interface CowsListProps {
   onNavigate: (page: Page, data?: any) => void;
 }
 
-interface Cow {
-  id: string;
-  name: string;
-  breed: string;
-  status: 'milking' | 'dry' | 'pregnant' | 'sick';
-  avgDailyMilk: number;
-  lastHealthCheck: string;
+type CowRow = {
+  id: number;
+  oznaka: string;
+  rasa: string;
+  status: KravaDto['trenutniStatus'];
+  prosjekL: number;
+  datumRef: string;
   alerts: number;
-}
+};
 
-const mockCows: Cow[] = [
-  { id: 'C001', name: 'Bella', breed: 'Holstein', status: 'milking', avgDailyMilk: 32.5, lastHealthCheck: '2025-12-05', alerts: 0 },
-  { id: 'C002', name: 'Daisy', breed: 'Jersey', status: 'milking', avgDailyMilk: 28.3, lastHealthCheck: '2025-12-06', alerts: 1 },
-  { id: 'C003', name: 'Luna', breed: 'Holstein', status: 'pregnant', avgDailyMilk: 0, lastHealthCheck: '2025-12-04', alerts: 0 },
-  { id: 'C004', name: 'Rosie', breed: 'Brown Swiss', status: 'milking', avgDailyMilk: 30.8, lastHealthCheck: '2025-12-07', alerts: 0 },
-  { id: 'C005', name: 'Clover', breed: 'Holstein', status: 'sick', avgDailyMilk: 15.2, lastHealthCheck: '2025-12-07', alerts: 2 },
-  { id: 'C006', name: 'Buttercup', breed: 'Jersey', status: 'milking', avgDailyMilk: 29.1, lastHealthCheck: '2025-12-05', alerts: 0 },
-  { id: 'C007', name: 'Bessie', breed: 'Holstein', status: 'dry', avgDailyMilk: 0, lastHealthCheck: '2025-12-03', alerts: 0 },
-  { id: 'C008', name: 'Molly', breed: 'Ayrshire', status: 'milking', avgDailyMilk: 31.4, lastHealthCheck: '2025-12-06', alerts: 0 },
-];
-
-const statusColors = {
-  milking: 'bg-green-100 text-green-700',
-  dry: 'bg-gray-100 text-gray-700',
-  pregnant: 'bg-blue-100 text-blue-700',
-  sick: 'bg-red-100 text-red-700',
+const statusColors: Record<KravaDto['trenutniStatus'], string> = {
+  Aktivna: 'bg-green-100 text-green-700',
+  Neaktivna: 'bg-gray-100 text-gray-700',
+  PodNadzorom: 'bg-amber-100 text-amber-700',
+  Prodana: 'bg-blue-100 text-blue-700',
 };
 
 export function CowsList({ onNavigate }: CowsListProps) {
@@ -39,11 +30,46 @@ export function CowsList({ onNavigate }: CowsListProps) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
+  const [krave, setKrave] = useState<KravaDto[] | null>(null);
+  const [upozorenja, setUpozorenja] = useState<UpozorenjeDto[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredCows = mockCows.filter(cow => {
-    const matchesSearch = cow.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         cow.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         cow.breed.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    let mounted = true;
+    Promise.all([api.krave.list(), api.upozorenja.list().catch(() => [] as UpozorenjeDto[])])
+      .then(([k, u]) => {
+        if (!mounted) return;
+        setKrave(k);
+        setUpozorenja(u);
+      })
+      .catch((e) => setError(e?.message || 'Greška pri učitavanju podataka'));
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const rows: CowRow[] = useMemo(() => {
+    if (!krave) return [];
+    const upozByCow = new Map<number, number>();
+    (upozorenja || []).forEach(u => {
+      if (u.idKrave) upozByCow.set(u.idKrave, (upozByCow.get(u.idKrave) || 0) + 1);
+    });
+    return krave.map(k => ({
+      id: k.idKrave,
+      oznaka: k.oznakaKrave,
+      rasa: k.rasa,
+      status: k.trenutniStatus,
+      prosjekL: k.prosjecnaDnevnaProizvodnjaL,
+      datumRef: k.datumDolaska || k.datumRodjenja,
+      alerts: upozByCow.get(k.idKrave) || 0,
+    }));
+  }, [krave, upozorenja]);
+
+  const filteredCows = rows.filter(cow => {
+    const s = searchTerm.toLowerCase();
+    const matchesSearch = cow.oznaka.toLowerCase().includes(s) ||
+                         String(cow.id).includes(s) ||
+                         cow.rasa.toLowerCase().includes(s);
     const matchesStatus = statusFilter === 'all' || cow.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -93,10 +119,10 @@ export function CowsList({ onNavigate }: CowsListProps) {
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             >
               <option value="all">All Status</option>
-              <option value="milking">Milking</option>
-              <option value="dry">Dry</option>
-              <option value="pregnant">Pregnant</option>
-              <option value="sick">Sick</option>
+              <option value="Aktivna">Aktivna</option>
+              <option value="Neaktivna">Neaktivna</option>
+              <option value="PodNadzorom">Pod nadzorom</option>
+              <option value="Prodana">Prodana</option>
             </select>
           </div>
         </div>
@@ -109,15 +135,18 @@ export function CowsList({ onNavigate }: CowsListProps) {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-4 text-left text-gray-700">ID</th>
-                <th className="px-6 py-4 text-left text-gray-700">Name</th>
+                <th className="px-6 py-4 text-left text-gray-700">Oznaka</th>
                 <th className="px-6 py-4 text-left text-gray-700">Breed</th>
                 <th className="px-6 py-4 text-left text-gray-700">Status</th>
                 <th className="px-6 py-4 text-left text-gray-700">Avg Daily Milk (L)</th>
-                <th className="px-6 py-4 text-left text-gray-700">Last Health Check</th>
+                <th className="px-6 py-4 text-left text-gray-700">Datum</th>
                 <th className="px-6 py-4 text-left text-gray-700">Alerts</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
+              {error && (
+                <tr><td className="px-6 py-4 text-red-600" colSpan={7}>{error}</td></tr>
+              )}
               {paginatedCows.map((cow) => (
                 <tr 
                   key={cow.id}
@@ -125,17 +154,17 @@ export function CowsList({ onNavigate }: CowsListProps) {
                   className="hover:bg-gray-50 cursor-pointer transition-colors"
                 >
                   <td className="px-6 py-4 text-gray-900">{cow.id}</td>
-                  <td className="px-6 py-4 text-gray-900">{cow.name}</td>
-                  <td className="px-6 py-4 text-gray-600">{cow.breed}</td>
+                  <td className="px-6 py-4 text-gray-900">{cow.oznaka}</td>
+                  <td className="px-6 py-4 text-gray-600">{cow.rasa}</td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex px-3 py-1 rounded-full ${statusColors[cow.status]}`}>
-                      {cow.status.charAt(0).toUpperCase() + cow.status.slice(1)}
+                      {cow.status}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-gray-900">
-                    {cow.avgDailyMilk > 0 ? cow.avgDailyMilk.toFixed(1) : '—'}
+                    {cow.prosjekL > 0 ? cow.prosjekL.toFixed(1) : '—'}
                   </td>
-                  <td className="px-6 py-4 text-gray-600">{cow.lastHealthCheck}</td>
+                  <td className="px-6 py-4 text-gray-600">{cow.datumRef}</td>
                   <td className="px-6 py-4">
                     {cow.alerts > 0 ? (
                       <div className="flex items-center gap-1 text-red-600">

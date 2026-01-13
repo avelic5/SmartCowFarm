@@ -25,6 +25,8 @@ export const api = {
   },
   upozorenja: {
     list: () => apiFetch<UpozorenjeDto[]>('/api/Upozorenje'),
+    update: (id: number, payload: UpozorenjeDto) =>
+      apiFetch<void>(`/api/Upozorenje/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
   },
   zadaci: {
     list: () => apiFetch<ZadatakDto[]>('/api/Zadatak'),
