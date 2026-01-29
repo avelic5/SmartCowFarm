@@ -74,6 +74,14 @@
               "target": "Package",
               "version": "[10.0.0, )"
             },
+            "QuestPDF": {
+              "target": "Package",
+              "version": "[2025.12.3, )"
+            },
+            "Select.HtmlToPdf": {
+              "target": "Package",
+              "version": "[23.1.0, )"
+            },
             "dotenv.net": {
               "target": "Package",
               "version": "[4.0.0, )"

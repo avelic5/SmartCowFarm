@@ -1,3 +1,4 @@
 {
-    "dotnet.defaultSolution": "SmartCowFarm.slnx"
+    "dotnet.defaultSolution": "SmartCowFarm.slnx",
+    "postman.settings.dotenv-detection-notification-visibility": false
 }

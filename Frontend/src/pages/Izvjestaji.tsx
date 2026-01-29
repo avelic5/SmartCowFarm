@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Calendar, Download, FileText, Filter, LineChart as LineIcon, Printer, Share2, Search } from 'lucide-react';
+import { Calendar, Download, FileText, Filter, LineChart as LineIcon, Printer, Share2, Search, AlertCircle } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useData } from '../context/DataContext';
 import { useSettings } from '../context/SettingsContext';
+import { api } from '../api/index'
+import {getApiBaseUrl} from '../api/http'
 
 function formatDdMm(date: Date): string {
   return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -27,9 +29,254 @@ function weekStartMondayMs(d: Date): number {
 }
 
 export function Izvjestaji() {
+
+
   const [range, setRange] = useState('last-30');
-  const [type, setType] = useState('monthly-prod'); // Postavljamo default na Mjesečni izvještaj
-  const [selectedEntity, setSelectedEntity] = useState(''); // Novi state za Cow ID ili drugi specifični entitet
+  const [type, setType] = useState('monthly-prod');
+  const [selectedEntity, setSelectedEntity] = useState('');
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [customStart, setCustomStart] = useState<string>('');
+  const [customEnd, setCustomEnd] = useState<string>('');
+
+  // Funkcija za izračun datuma - koristi istu logiku kao rangeWindow
+  const calculatePeriod = (periodType: 'filter' | 'last-30' | 'today') => {
+    const today = new Date();
+
+    if (periodType === 'today') {
+      // Za "Brzi pristup" - samo današnji dan
+      const start = new Date(today);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(today);
+      end.setHours(23, 59, 59, 999);
+
+      return {
+        startMs: start.getTime(),
+        endMs: end.getTime()
+      };
+    }
+    else if (periodType === 'last-30') {
+      // Za "Posljednji generisani izvještaji" - ZADNJIH 30 DANA
+      const end = new Date(today);
+      end.setHours(23, 59, 59, 999);
+
+      const start = new Date(today);
+      start.setDate(today.getDate() - 29); // 30 dana ukupno
+      start.setHours(0, 0, 0, 0);
+
+      return {
+        startMs: start.getTime(),
+        endMs: end.getTime()
+      };
+    }
+    else {
+      // Za filter iznad - koristi trenutne postavke filtera
+      // Vraćamo rangeWindow vrijednosti
+      return {
+        startMs: rangeWindow.startMs,
+        endMs: rangeWindow.endMs
+      };
+    }
+  };
+
+  // Glavna funkcija za download - prima tip i period
+  const handleDownloadPDF = async (type: string, periodType: 'filter' | 'last-30' | 'today' = 'filter') => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const API_BASE = getApiBaseUrl();
+
+      // Koristi calculatePeriod funkciju
+      const period = calculatePeriod(periodType);
+      const startMs = period.startMs;
+      const endMs = period.endMs;
+
+      const odDatum = formatDateForApi(new Date(startMs));
+      const doDatum = formatDateForApi(new Date(endMs));
+
+      console.log(`Downloading PDF: type=${type}, period=${periodType}, od=${odDatum}, do=${doDatum}`);
+
+      let url: string;
+      let body: string | null = null;
+
+      if (type === 'cow-card') {
+        if (!selectedEntity) {
+          throw new Error('Odaberite kravu za karton');
+        }
+        url = `${API_BASE}/api/Izvjestaji/kartonKrave/${selectedEntity}`;
+        body = null;
+
+      } else if (type === 'monthly-prod') {
+        url = `${API_BASE}/api/Izvjestaji/mjesecnaProizvodnja`;
+        body = JSON.stringify({ odDatum, doDatum });
+
+      } else if (type === 'health') {
+        url = `${API_BASE}/api/Izvjestaji/zdravstveniIzvjestaj`;
+        body = JSON.stringify({ odDatum, doDatum });
+
+      } else if (type === 'sensors') {
+        url = `${API_BASE}/api/Izvjestaji/izvjestajSenzora`;
+        body = JSON.stringify({ odDatum, doDatum });
+
+      } else {
+        throw new Error('Odaberite tip izvještaja');
+      }
+
+      const options: any = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      };
+
+      if (body !== null) {
+        options.body = body;
+      }
+
+      const response = await fetch(url, options);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        try {
+          const errorJson = JSON.parse(errorText);
+          throw new Error(errorJson.Poruka || `Server error: ${response.status}`);
+        } catch {
+          throw new Error(`Server error: ${response.status} ${response.statusText}`);
+        }
+      }
+
+      const blob = await response.blob();
+
+      if (blob.size === 0) {
+        throw new Error('PDF je prazan (0 bytes)');
+      }
+
+      let fileName = 'izvjestaj.pdf';
+
+      const contentDisposition = response.headers.get('content-disposition');
+      if (contentDisposition) {
+        let match = contentDisposition.match(/filename="([^"]+)"/);
+
+        if (!match) {
+          match = contentDisposition.match(/filename=([^;]+)/);
+        }
+
+        if (!match) {
+          match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/);
+          if (match) {
+            fileName = decodeURIComponent(match[1]);
+          }
+        } else if (match && match[1]) {
+          fileName = match[1].trim();
+        }
+      } else {
+        console.warn('Content-Disposition header nije pronađen');
+      }
+
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = fileName;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+
+    } catch (err: any) {
+      setError(err.message || 'Greška pri preuzimanju PDF-a');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Funkcija za print - takođe prima period tip
+  const handlePrintPDF = async (type: string, periodType: 'filter' | 'last-30' | 'today' = 'filter') => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const API_BASE = getApiBaseUrl();
+
+      // Koristi calculatePeriod funkciju
+      const period = calculatePeriod(periodType);
+      const startMs = period.startMs;
+      const endMs = period.endMs;
+
+      const odDatum = formatDateForApi(new Date(startMs));
+      const doDatum = formatDateForApi(new Date(endMs));
+
+      let url: string;
+      let fetchOptions: any = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      };
+
+      if (type === 'cow-card') {
+        if (!selectedEntity) throw new Error('Odaberite kravu za karton');
+        url = `${API_BASE}/api/Izvjestaji/kartonKrave/${selectedEntity}`;
+      } else if (type === 'monthly-prod') {
+        url = `${API_BASE}/api/Izvjestaji/mjesecnaProizvodnja`;
+        fetchOptions.body = JSON.stringify({ odDatum, doDatum });
+      } else if (type === 'health') {
+        url = `${API_BASE}/api/Izvjestaji/zdravstveniIzvjestaj`;
+        fetchOptions.body = JSON.stringify({ odDatum, doDatum });
+      } else if (type === 'sensors') {
+        url = `${API_BASE}/api/Izvjestaji/izvjestajSenzora`;
+        fetchOptions.body = JSON.stringify({ odDatum, doDatum });
+      } else {
+        throw new Error('Odaberite tip izvještaja');
+      }
+
+      const response = await fetch(url, fetchOptions);
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+
+      const pdfUrl = URL.createObjectURL(blob);
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = pdfUrl;
+
+      document.body.appendChild(iframe);
+
+      iframe.onload = () => {
+        setTimeout(() => {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+          setTimeout(() => {
+            if (iframe && iframe.parentNode) {
+              document.body.removeChild(iframe);
+            }
+            URL.revokeObjectURL(pdfUrl);
+          }, 15000);
+          setLoading(false)
+        }, 500);
+      };
+    } catch (err: any) {
+      setError(err.message || 'Greška pri štampanju PDF-a');
+      setLoading(false);
+    }
+  };
+
+  const formatDateForApi = (date: Date): string => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
+
+  // Funkcije koje koriste filter (gornji dio)
+  const handleFilterDownloadPDF = () => {
+    handleDownloadPDF(type, 'filter');
+  };
+
+  const handleFilterPrintPDF = () => {
+    handlePrintPDF(type, 'filter');
+  };
+
 
   const { krave, produkcijaMlijeka } = useData();
   const { isDarkMode } = useSettings();
@@ -61,21 +308,43 @@ export function Izvjestaji() {
   );
 
   const rangeWindow = useMemo(() => {
-    const end = new Date(effectiveEndMs);
+    const end = new Date();
     const start = new Date(end);
 
-    if (range === 'last-90') {
+    if (range === 'custom') {
+      if (customStart && customEnd) {
+        const startDate = new Date(customStart);
+        const endDate = new Date(customEnd);
+
+        if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+          start.setTime(startDate.getTime());
+          end.setTime(endDate.getTime());
+        }
+      }
+      else {
+        start.setDate(end.getDate() - 29);
+      }
+    }
+    else if (range === 'last-90') {
       start.setDate(end.getDate() - 89);
-    } else if (range === 'ytd') {
-      start.setMonth(0, 1);
-      start.setHours(0, 0, 0, 0);
-    } else {
+    }
+    else if (range === 'ytd') {
+      start.setFullYear(end.getFullYear() - 1);
+    }
+    else {
       start.setDate(end.getDate() - 29);
     }
 
     start.setHours(0, 0, 0, 0);
-    return { startMs: start.getTime(), endMs: end.getTime() };
-  }, [effectiveEndMs, range]);
+    end.setHours(23, 59, 59, 999);
+
+    return {
+      startMs: start.getTime(),
+      endMs: end.getTime(),
+      startDate: start,
+      endDate: end
+    };
+  }, [range, customStart, customEnd]);
 
   const productionInRange = useMemo(() => {
     return produkcijaMlijeka.filter((p) => {
@@ -180,7 +449,7 @@ export function Izvjestaji() {
       { id: `R-${dateId}-01`, naziv: cowLabel, period: 'Tekući datum', status: 'Spremno', tip: 'PDF', trend: 'N/A' },
       { id: `R-${dateId}-02`, naziv: 'Mjesečni izvještaj proizvodnje', period: periodText, status: 'Spremno', tip: 'PDF', trend },
       { id: `R-${dateId}-03`, naziv: 'Izvještaj zdravlja i tretmana', period: periodText, status: 'Spremno', tip: 'PDF', trend: 'N/A' },
-      { id: `R-${dateId}-04`, naziv: 'Senzori i okolina', period: periodText, status: 'Spremno', tip: 'CSV', trend: 'N/A' },
+      { id: `R-${dateId}-04`, naziv: 'Senzori i okolina', period: periodText, status: 'Spremno', tip: 'PDF', trend: 'N/A' },
     ];
   }, [deltaLabel, krave, rangeWindow, selectedEntity, totals.totalPrev]);
 
@@ -193,7 +462,7 @@ export function Izvjestaji() {
       { title: cow ? `Karton krave (${cow.identifikacioniBroj})` : 'Karton krave', date: baseDate, size: '—', type: 'PDF' },
       { title: 'Mjesečni izvještaj proizvodnje', date: baseDate, size: '—', type: 'PDF' },
       { title: 'Zdravlje i tretmani', date: baseDate, size: '—', type: 'PDF' },
-      { title: 'Senzori i okolina', date: baseDate, size: '—', type: 'CSV' },
+      { title: 'Senzori i okolina', date: baseDate, size: '—', type: 'PDF' },
     ];
   }, [krave, selectedEntity]);
 
@@ -217,43 +486,28 @@ export function Izvjestaji() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-slate-100">Izvještaji</h1>
           <p className="mt-1 text-gray-600 dark:text-slate-300">Pregled, izvoz i print ključnih metrika farme</p>
         </div>
-        <div className="flex flex-wrap gap-3 mb-4">
-          <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:bg-slate-800/60">
-            <Share2 className="w-4 h-4" /> Podijeli
-          </button>
-          <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:bg-slate-800/60">
-            <Download className="w-4 h-4" /> Export PDF
-          </button>
-          <button className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-white shadow-md hover:bg-green-600 transition-colors">
-            <Printer className="w-4 h-4" /> Print verzija
-          </button>
-        </div>
       </div>
 
-      {/* Filters (REORGANIZOVANO) */}
-      <div
-        className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm space-y-4 text-gray-900 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-100" // Dodan space-y-4 za razmak između filtera i akcija
-      >
+      {/* Filters */}
+      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm space-y-4 text-gray-900 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-100">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          
-          {/* Kolona 1: Tip izvještaja (Uvijek prisutno) */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-600 dark:text-slate-300">Tip izvještaja</label>
             <select
               className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100"
               value={type}
-              onChange={(e) => { 
-                setType(e.target.value); 
-                setSelectedEntity(''); // Reset entity on type change
+              onChange={(e) => {
+                setType(e.target.value);
+                setSelectedEntity('');
               }}
             >
-              <option value="monthly-prod">Mjesečni izvještaj proizvodnje</option>
+              <option value="monthly-prod">Izvještaj proizvodnje</option>
               <option value="cow-card">Karton krave (Individualni dosje)</option>
               <option value="health">Zdravlje i tretmani (Veterina)</option>
+              <option value="sensors">Senzori i okolina</option>
             </select>
           </div>
 
-          {/* Kolona 2: Dinamički input (Krava ID ili Period) */}
           <div className="space-y-2">
             {type === 'cow-card' ? (
               <>
@@ -280,7 +534,13 @@ export function Izvjestaji() {
                   <select
                     className="w-full bg-transparent text-gray-900 focus:outline-none dark:text-slate-100"
                     value={range}
-                    onChange={(e) => setRange(e.target.value)}
+                    onChange={(e) => {
+                      setRange(e.target.value);
+                      if (e.target.value !== 'custom') {
+                        setCustomStart('');
+                        setCustomEnd('');
+                      }
+                    }}
                   >
                     <option value="last-30">Posljednjih 30 dana</option>
                     <option value="last-90">Posljednjih 90 dana</option>
@@ -288,11 +548,33 @@ export function Izvjestaji() {
                     <option value="custom">Prilagođeni raspon</option>
                   </select>
                 </div>
+
+                {range === 'custom' && (
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                    <div>
+                      <label className="text-xs text-gray-500 dark:text-slate-400 mb-1 block">Od datuma</label>
+                      <input
+                        type="date"
+                        value={customStart}
+                        onChange={(e) => setCustomStart(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500 dark:text-slate-400 mb-1 block">Do datuma</label>
+                      <input
+                        type="date"
+                        value={customEnd}
+                        onChange={(e) => setCustomEnd(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100"
+                      />
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
 
-          {/* Kolona 3: Dodatni Filteri (Grupa / Zona, samo za grupne izvještaje) */}
           {type !== 'cow-card' && (
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-600 dark:text-slate-300">Grupa / Zona</label>
@@ -308,24 +590,30 @@ export function Izvjestaji() {
           )}
         </div>
 
-        {/* Akciona dugmad (Uvijek u posebnom redu) */}
         <div className="pt-4 flex justify-end gap-3 border-t border-gray-200 dark:border-slate-700">
+          <div className="flex flex-wrap gap-3 ">
             <button
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-700 hover:bg-gray-100 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-200 dark:hover:bg-slate-800/50"
+              onClick={handleFilterDownloadPDF}
+              disabled={loading}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:bg-slate-800/60 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Filter className="w-4 h-4" /> Prilagođeni filteri
+              <Download className="w-4 h-4" />
+              {loading ? 'Preuzimanje...' : 'Preuzmi PDF'}
             </button>
+
             <button
-              className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-white shadow-md hover:bg-green-600 transition-colors"
+              onClick={handleFilterPrintPDF}
+              disabled={loading}
+              className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-white shadow-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <LineIcon className="w-4 h-4" /> Generiši pregled
+              <Printer className="w-4 h-4" />
+              {loading ? 'Učitavanje...' : 'Print PDF'}
             </button>
+          </div>
         </div>
       </div>
 
-      {/* Ostatak koda ostaje nepromijenjen */}
-      
-      {/* KPI cards (Relevantni za sve izvještaje) */}
+      {/* KPI cards */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mt-4 mb-6">
         {kpi.map((item) => (
           <div
@@ -343,7 +631,7 @@ export function Izvjestaji() {
         ))}
       </div>
 
-      {/* Charts row (Vizualizacija koja podržava izvještaje) */}
+      {/* Charts row */}
       <div className="grid gap-6 lg:grid-cols-3 mt-2">
         <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
           <div className="flex items-center justify-between mb-4">
@@ -358,10 +646,10 @@ export function Izvjestaji() {
               <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#334155' : '#e5e7eb'} />
               <XAxis dataKey="date" stroke={isDarkMode ? '#b9c7e3' : '#6b7280'} />
               <YAxis stroke={isDarkMode ? '#b9c7e3' : '#6b7280'} />
-              <Tooltip 
-                contentStyle={{ 
-                  background: isDarkMode ? '#0f1727' : '#fff', 
-                  border: `1px solid ${isDarkMode ? '#1c2436' : '#e5e7eb'}`, 
+              <Tooltip
+                contentStyle={{
+                  background: isDarkMode ? '#0f1727' : '#fff',
+                  border: `1px solid ${isDarkMode ? '#1c2436' : '#e5e7eb'}`,
                   borderRadius: 8,
                   color: isDarkMode ? '#e7eefc' : '#0f1727',
                 }}
@@ -386,9 +674,9 @@ export function Izvjestaji() {
                   const procenat = ukupnoZdravlje > 0 ? Math.round((broj / ukupnoZdravlje) * 100) : 0;
                   return [`${broj} (${procenat}%)`, name as string];
                 }}
-                contentStyle={{ 
-                  background: isDarkMode ? '#0f1727' : '#fff', 
-                  border: `1px solid ${isDarkMode ? '#1c2436' : '#e5e7eb'}`, 
+                contentStyle={{
+                  background: isDarkMode ? '#0f1727' : '#fff',
+                  border: `1px solid ${isDarkMode ? '#1c2436' : '#e5e7eb'}`,
                   borderRadius: 8,
                   color: isDarkMode ? '#e7eefc' : '#0f1727',
                 }}
@@ -421,10 +709,10 @@ export function Izvjestaji() {
               <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#334155' : '#e5e7eb'} />
               <XAxis dataKey="name" stroke={isDarkMode ? '#b9c7e3' : '#6b7280'} tick={{ fontSize: 12 }} />
               <YAxis stroke={isDarkMode ? '#b9c7e3' : '#6b7280'} />
-              <Tooltip 
-                contentStyle={{ 
-                  background: isDarkMode ? '#0f1727' : '#fff', 
-                  border: `1px solid ${isDarkMode ? '#1c2436' : '#e5e7eb'}`, 
+              <Tooltip
+                contentStyle={{
+                  background: isDarkMode ? '#0f1727' : '#fff',
+                  border: `1px solid ${isDarkMode ? '#1c2436' : '#e5e7eb'}`,
                   borderRadius: 8,
                   color: isDarkMode ? '#e7eefc' : '#0f1727',
                 }}
@@ -467,10 +755,17 @@ export function Izvjestaji() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Posljednji generisani izvještaji</h3>
             <p className="text-sm text-gray-600 dark:text-slate-300">Spremni za preuzimanje ili štampu</p>
           </div>
-          <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-200 dark:hover:bg-slate-800/50">
-            <FileText className="w-4 h-4" /> Novi izvještaj
-          </button>
         </div>
+
+        {error && (
+          <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg dark:bg-red-900/20 dark:border-red-800 dark:text-red-300">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              <span className="text-sm font-medium">{error}</span>
+            </div>
+          </div>
+        )}
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600 text-left dark:bg-slate-950/40 dark:text-slate-300">
@@ -484,25 +779,43 @@ export function Izvjestaji() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
-              {tableRows.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50 dark:hover:bg-slate-950/40">
-                  <td className="px-6 py-3 text-gray-900 dark:text-slate-100">{row.id}</td>
-                  <td className="px-6 py-3 text-gray-900 dark:text-slate-100">{row.naziv}</td>
-                  <td className="px-6 py-3 text-gray-600 dark:text-slate-300">{row.period}</td>
-                  <td className="px-6 py-3">
-                    <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">{row.status}</span>
-                  </td>
-                  <td className="px-6 py-3 text-right text-gray-900 dark:text-slate-100">{row.trend}</td>
-                  <td className="px-6 py-3 text-right">
-                    <div className="inline-flex items-center gap-2">
-                      <button className="rounded-lg border border-gray-300 px-3 py-1 text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800/50">PDF</button>
-                      {row.tip === 'CSV' && (
-                        <button className="rounded-lg border border-gray-300 px-3 py-1 text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800/50">CSV</button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {tableRows.map((row) => {
+                // Odredi tip izvještaja na osnovu naziva
+                const determineReportTypeFromTitle = (title: string) => {
+                  if (title.includes('Karton krave')) return 'cow-card';
+                  if (title.includes('Mjesečni izvještaj')) return 'monthly-prod';
+                  if (title.includes('Izvještaj zdravlja')) return 'health';
+                  if (title.includes('Senzori')) return 'sensors';
+                  return 'monthly-prod';
+                };
+
+                const izvjestajType = determineReportTypeFromTitle(row.naziv);
+
+                return (
+                  <tr key={row.id} className="hover:bg-gray-50 dark:hover:bg-slate-950/40">
+                    <td className="px-6 py-3 text-gray-900 dark:text-slate-100">{row.id}</td>
+                    <td className="px-6 py-3 text-gray-900 dark:text-slate-100">{row.naziv}</td>
+                    <td className="px-6 py-3 text-gray-600 dark:text-slate-300">{
+                      row.naziv.includes('Karton krave') ? "Odaberite kravu prvo" :
+                        row.period}</td>
+                    <td className="px-6 py-3">
+                      <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">{row.status}</span>
+                    </td>
+                    <td className="px-6 py-3 text-right text-gray-900 dark:text-slate-100">{row.trend}</td>
+                    <td className="px-6 py-3 text-right">
+                      <div className="inline-flex items-center gap-2">
+                        <button
+                          onClick={() => handleDownloadPDF(izvjestajType, 'last-30')}
+                          disabled={loading}
+                          className="rounded-lg border border-gray-300 px-3 py-1 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800/50"
+                        >
+                          {loading ? '...' : 'PDF'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -515,29 +828,48 @@ export function Izvjestaji() {
           <span className="text-sm text-gray-500 dark:text-slate-400">Najnoviji exporti</span>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {recentReports.map((r) => (
-            <div key={r.title} className="rounded-lg border border-gray-200 p-4 transition-shadow hover:shadow-sm dark:border-slate-700 dark:hover:shadow-xl">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="h-10 w-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center dark:bg-slate-950/40 dark:text-blue-300">
-                    <FileText className="w-5 h-5" />
+          {recentReports.map((r) => {
+            const determineReportType = (title: string) => {
+              if (title.includes('Karton krave')) return 'cow-card';
+              if (title.includes('Mjesečni izvještaj proizvodnje')) return 'monthly-prod';
+              if (title.includes('Zdravlje')) return 'health';
+              if (title.includes('Senzori')) return 'sensors';
+              return 'monthly-prod';
+            };
+            console.log(r.title);
+
+            const reportType = determineReportType(r.title);
+
+            return (
+              <div key={r.title} className="rounded-lg border border-gray-200 p-4 transition-shadow hover:shadow-sm dark:border-slate-700 dark:hover:shadow-xl">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-10 w-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center dark:bg-slate-950/40 dark:text-blue-300">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm text-gray-900 dark:text-slate-100">{r.title}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">{r.date}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-sm text-gray-900 dark:text-slate-100">{r.title}</p>
-                    <p className="text-xs text-gray-500 dark:text-slate-400">{r.date}</p>
-                  </div>
+                  <span className="text-xs text-gray-500 dark:text-slate-400">{r.type}</span>
                 </div>
-                <span className="text-xs text-gray-500 dark:text-slate-400">{r.type}</span>
+                <div className="flex items-center justify-between text-sm text-gray-600 dark:text-slate-300">
+                  <span>{
+                    r.title.includes('Karton krave') ? "Odaberite kravu prvo" : ""}</span>
+                  <button
+                    onClick={() => handleDownloadPDF(reportType, 'today')}
+                    disabled={loading}
+                    className="text-green-600 hover:text-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Preuzima se...' : 'Preuzmi'}
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center justify-between text-sm text-gray-600 dark:text-slate-300">
-                <span>{r.size}</span>
-                <button className="text-green-600 hover:text-green-700">Preuzmi</button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
   );
 }
-
