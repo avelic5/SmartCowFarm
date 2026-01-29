@@ -19,11 +19,14 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+    <PackageReference Include="QuestPDF" Version="2025.12.3" />
+    <PackageReference Include="Select.HtmlToPdf" Version="23.1.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Data/" />
     <Folder Include="Models/Enums/" />
+    <Folder Include="Services/" />
   </ItemGroup>
 
 </Project>

@@ -151,3 +151,44 @@ export interface TerapijaAplikacijeDto {
   idIzvrsilac: number;
   napomena: string;
 }
+
+// DTO tipovi za izvještaje
+export interface GenerisiIzvjestajDto {
+  odDatum: DateOnly;
+  doDatum: DateOnly;
+  kravaId?: number;
+  grupa?: string;
+}
+
+// Tip za DateOnly (ako već nemaš)
+export type DateOnly = string; // Format: "YYYY-MM-DD"
+
+// Tipovi za izvještaje (ako su potrebni za TypeScript)
+export interface DailyProduction {
+  datum: DateOnly;
+  kolicina: number;
+  prosjekProtoka: number;
+}
+
+export interface MonthlyReportData {
+  odDatum: DateOnly;
+  doDatum: DateOnly;
+  dnevnaProizvodnja: DailyProduction[];
+  ukupnoProizvodnje: number;
+  prosjecnoDnevno: number;
+  brojKrava: number;
+  prosjecnoPoKravi: number;
+}
+
+export interface StatusCount {
+  status: string;
+  broj: number;
+}
+
+export interface HealthReportData {
+  odDatum: DateOnly;
+  doDatum: DateOnly;
+  slucajevi: ZdravstveniSlucajDto[];
+  ukupnoSlucajeva: number;
+  poStatusu: StatusCount[];
+}
