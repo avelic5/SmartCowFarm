@@ -5,6 +5,8 @@ using Backend.Data;
 using Backend.Models;
 using Backend.Services;
 using Backend.Controllers.Dtos;
+using Microsoft.AspNetCore.Authorization;
+using Backend.Models.Enums;
 
 namespace Backend.Controllers
 {
@@ -21,7 +23,6 @@ namespace Backend.Controllers
             this.pdfGenerator = pdfGenerator;
         }
 
-        // 1. Generiši mjesečni izvještaj proizvodnje
         [HttpPost("mjesecnaProizvodnja")]
         public async Task<IActionResult> GenerisiMjesecniIzvjestajProizvodnje([FromBody] GenerisiIzvjestajDto dto)
         {
@@ -44,13 +45,12 @@ namespace Backend.Controllers
             }
         }
 
-        // 2. Generiši karton krave
         [HttpPost("kartonKrave/{kravaId}")]
         public async Task<IActionResult> GenerisiKartonKrave(int kravaId)
         {
             try
             {
-                // Pronađi kravu sa svim podacima
+
                 var krava = await baza.Krave
                     .Include(k => k.Muze)
                     .Include(k => k.ZdravstveniSlucajevi)
@@ -112,7 +112,6 @@ namespace Backend.Controllers
 
         private async Task<MonthlyReportData> DohvatiPodatkeZaIzvjestaj(DateOnly odDatum, DateOnly doDatum)
         {
-            // Dohvati mužnje za period
             var muznje = await baza.Muze
                 .Where(m => m.Datum >= odDatum && m.Datum <= doDatum)
                 .GroupBy(m => m.Datum)

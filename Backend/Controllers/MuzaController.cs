@@ -3,11 +3,13 @@ using Backend.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[Authorize]
     public class MuzaController : ControllerBase
     {
         private readonly SmartCowFarmDatabaseContext baza;
@@ -15,8 +17,9 @@ namespace Backend.Controllers
         {
             baza = context;
         }
-        //HTTP BASIC
+
         [HttpGet]
+        //[Authorize]
         public async Task<ActionResult<List<Muza>>> DajMuze()
         {
             try
@@ -31,6 +34,7 @@ namespace Backend.Controllers
 
 
         [HttpGet("{id}")]
+        //[Authorize]
         public async Task<ActionResult<Muza>> DajMuzu(int id)
         {
             try
@@ -49,8 +53,8 @@ namespace Backend.Controllers
             }
         }
 
-        //POST
         [HttpPost]
+        //[Authorize]
         public async Task<ActionResult<Muza>> KreirajMuzu([FromBody] Muza novaMuza)
         {
             try
@@ -72,6 +76,7 @@ namespace Backend.Controllers
 
 
         [HttpPut("{id}")]
+        //[Authorize]
         public async Task<ActionResult> UpdateMuzu(int id, [FromBody] Muza novaMuza)
         {
             try
@@ -95,6 +100,7 @@ namespace Backend.Controllers
         }
 
         [HttpDelete("{id}")]
+        //[Authorize]
         public async Task<IActionResult> ObrisiMuzu(int id)
         {
             try
@@ -113,8 +119,8 @@ namespace Backend.Controllers
             }
         }
 
-        // 7. IZRAČUNAJ TRAJANJE MUŽNJE
         [HttpGet("{idMuze}/trajanje")]
+        //[Authorize]
         public async Task<ActionResult> IzracunajTrajanje(int idMuze)
         {
             try
@@ -151,8 +157,8 @@ namespace Backend.Controllers
             }
         }
 
-        // 8. VALIDIRAJ KOLIČINU MUŽNJE
         [HttpGet("{idMuze}/validirajKolicinu")]
+        //[Authorize]
         public async Task<ActionResult> ValidirajKolicinu(int idMuze)
         {
             try
@@ -252,8 +258,8 @@ namespace Backend.Controllers
             }
         }
 
-        // 9. IZRAČUNAJ PROTOK MUŽNJE
         [HttpGet("{idMuze}/protok")]
+        //[Authorize]
         public async Task<ActionResult> IzracunajProtok(int idMuze)
         {
             try

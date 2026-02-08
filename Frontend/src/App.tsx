@@ -35,13 +35,22 @@ export type Page =
   | 'settings';
 
 export default function App() {
-  const { prijavljenKorisnik } = useAuth();
+  const { korisnik, isLoading } = useAuth();
 
+  // Prikaži loading dok se ne učita korisnik
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <span className="ml-3 text-gray-600">Učitavanje...</span>
+      </div>
+    );
+  }
   return (
     <Routes>
       {/* Javne rute */}
       <Route path="/prijava" element={
-        prijavljenKorisnik ? <Navigate to="/kontrolna-tabla" replace /> : <EkranPrijave />
+        korisnik ? <Navigate to="/kontrolna-tabla" replace /> : <EkranPrijave />
       } />
 
       {/* Zaštićene rute */}

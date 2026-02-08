@@ -5,7 +5,7 @@ import { NavigacijskaSideBar } from '../components/NavigacijskaSideBar';
 import { Zaglavlje } from '../components/Zaglavlje';
 
 export function PrijavniLayout() {
-  const { prijavljenKorisnik } = useAuth();
+  const { korisnik } = useAuth();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export function PrijavniLayout() {
     };
   }, [isMobileNavOpen]);
 
-  if (!prijavljenKorisnik) {
+  if (!korisnik) {
     return <Navigate to="/prijava" replace />;
   }
 

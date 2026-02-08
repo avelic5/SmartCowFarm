@@ -11,6 +11,7 @@ import {
   mapUiStatusToBackend,
   mapUiStatusToBackendTask,
 } from '../api/mappers';
+import { useAuth } from './AuthContext';
 
 interface DataContextType {
   krave: Krava[];
@@ -71,22 +72,22 @@ function buildKravaDtoFromUi(base: KravaDto | undefined, ui: Partial<Krava>, id?
     idMajke: base?.idMajke ?? null,
     trenutniStatus: mapUiStatusToBackend(
       ui.status ??
-        mapKravaDtoToUi(
-          base ?? {
-            idKrave: 0,
-            oznakaKrave: '',
-            rasa: '',
-            datumRodjenja: nowDate,
-            datumDolaska: nowDate,
-            porijekloTip: 'Nepoznato',
-            trenutniStatus: 'PodNadzorom',
-            pocetnaTezina: 0,
-            trenutnaProcijenjenaTezina: 0,
-            opisIzgleda: '',
-            prosjecnaDnevnaProizvodnjaL: 0,
-            napomene: '',
-          },
-        ).status,
+      mapKravaDtoToUi(
+        base ?? {
+          idKrave: 0,
+          oznakaKrave: '',
+          rasa: '',
+          datumRodjenja: nowDate,
+          datumDolaska: nowDate,
+          porijekloTip: 'Nepoznato',
+          trenutniStatus: 'PodNadzorom',
+          pocetnaTezina: 0,
+          trenutnaProcijenjenaTezina: 0,
+          opisIzgleda: '',
+          prosjecnaDnevnaProizvodnjaL: 0,
+          napomene: '',
+        },
+      ).status,
     ),
     pocetnaTezina: ui.tezina ?? base?.pocetnaTezina ?? 0,
     trenutnaProcijenjenaTezina: ui.tezina ?? base?.trenutnaProcijenjenaTezina ?? base?.pocetnaTezina ?? 0,
@@ -110,11 +111,31 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const readAlertIdsMemo = useMemo(() => readAlertIds, [readAlertIds]);
 
+  const { token } = useAuth();
+
   useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    if (!storedToken && !token) {
+      return;
+    }
+
+    // Koristi token iz localStorage ako context token nije dostupan
+    const effectiveToken = token || storedToken;
+    if (!effectiveToken) {
+      return;
+    }
+
+    // Takođe provjeri da li je token validan (barem 10 karaktera)
+    if (effectiveToken.length < 10) {
+      return;
+    }
+
     let cancelled = false;
 
     const load = async () => {
       try {
+  
+
         const results = await Promise.allSettled([
           api.krave.list(),
           api.muze.list(),
@@ -130,10 +151,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const slucajeviRes = results[4].status === 'fulfilled' ? results[4].value : [];
 
         for (const r of results) {
-          if (r.status === 'rejected') console.error(r.reason);
+          if (r.status === 'rejected') console.error('API greška:', r.reason);
         }
 
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
 
         const kraveMap: Record<string, KravaDto> = {};
         const kraveUi = kraveRes.map((k) => {
@@ -165,16 +188,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setProdukcijaMlijeka(muzeUi);
         setZdravstveniZapisi(slucajeviUi);
       } catch (e) {
-        console.error(e);
       }
     };
 
     load();
 
     return () => {
+
       cancelled = true;
     };
-  }, [readAlertIdsMemo]);
+  }, [token, readAlertIdsMemo]);
 
   const dodajKravu = (krava: Omit<Krava, 'id'>) => {
     const run = async () => {

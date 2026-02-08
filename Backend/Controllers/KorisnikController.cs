@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Backend.Services;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Backend.Controllers
 {
@@ -15,13 +18,20 @@ namespace Backend.Controllers
     {
         private readonly IPasswordHasher<Korisnik> passwordHasher;
         private readonly SmartCowFarmDatabaseContext baza;
-        public KorisnikController(SmartCowFarmDatabaseContext context)
+        private readonly IJwtServis jwtServis;
+
+        public KorisnikController(
+            SmartCowFarmDatabaseContext _context,
+            IPasswordHasher<Korisnik> _passwordHasher,
+            IJwtServis _jwtServis)
         {
-            baza = context;
-            passwordHasher = new PasswordHasher<Korisnik>();
+            baza = _context;
+            passwordHasher = _passwordHasher;
+            jwtServis = _jwtServis;
         }
-        //HTTP BASIC
+
         [HttpGet]
+        [Authorize(Roles = nameof(RadnoMjesto.Admin))]
         public async Task<ActionResult<List<Korisnik>>> DajKorisnike()
         {
             try
@@ -34,16 +44,25 @@ namespace Backend.Controllers
             }
         }
 
-        //HTTP DAJ KORISNIKA PO IDU
+        //[Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<Korisnik>> DajKorisnika(int id)
         {
             try
             {
+                var trenutniKorisnikId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var uloga = User.FindFirstValue(ClaimTypes.Role);
+
+                if (uloga != nameof(RadnoMjesto.Admin) &&
+                    (!int.TryParse(trenutniKorisnikId, out int trenutniId) || trenutniId != id))
+                {
+                    return Forbid(); 
+                }
+
                 var trazeniKorisnik = await baza.Korisnici.FindAsync(id);
                 if (trazeniKorisnik == null)
                 {
-                    return NotFound();
+                    return NotFound(new { Poruka = "Korisnik nije pronadjen" });
                 }
 
                 return Ok(trazeniKorisnik);
@@ -54,49 +73,104 @@ namespace Backend.Controllers
             }
         }
 
-        //POST
         [HttpPost]
-        public async Task<ActionResult<Korisnik>> KreirajKorisnika([FromBody] Korisnik noviKorisnik)
+        //[Authorize(Roles = nameof(RadnoMjesto.Admin))]
+        public async Task<ActionResult<Korisnik>> KreirajKorisnika([FromBody] KreirajKorisnikaDto noviKorisnikDto)
         {
-            if (noviKorisnik == null)
-                return BadRequest();
+            if (noviKorisnikDto == null)
+                return BadRequest(new { Poruka = "Korisnik podaci su obavezni" });
 
-            noviKorisnik.HashLozinke = passwordHasher.HashPassword(noviKorisnik, noviKorisnik.HashLozinke);
             try
             {
+                // Provjeri da li korisničko ime već postoji
+                if (await baza.Korisnici.AnyAsync(k => k.KorisnickoIme == noviKorisnikDto.KorisnickoIme))
+                {
+                    return Conflict(new { Poruka = "Korisničko ime već postoji" });
+                }
+
+                if (await baza.Korisnici.AnyAsync(k => k.Email == noviKorisnikDto.Email))
+                {
+                    return Conflict(new { Poruka = "Email već postoji" });
+                }
+
+                var noviKorisnik = new Korisnik
+                {
+                    Ime = noviKorisnikDto.Ime,
+                    Prezime = noviKorisnikDto.Prezime,
+                    Email = noviKorisnikDto.Email,
+                    KorisnickoIme = noviKorisnikDto.KorisnickoIme,
+                    Telefon = noviKorisnikDto.Telefon,
+                    Odjel = Enum.TryParse<Odjel>(noviKorisnikDto.Odjel, out var odjel) ? odjel : Odjel.Proizvodnja,
+                    RadnoMjesto = noviKorisnikDto.RadnoMjesto,
+                    StatusNaloga = noviKorisnikDto.StatusNaloga,
+                    DatumZaposlenja = noviKorisnikDto.DatumZaposlenja,
+                    // HashLozinke NE POSTAVLJATI OVDJE!
+                    Napomene = noviKorisnikDto.Napomene ?? string.Empty
+                };
+
+
+                noviKorisnik.HashLozinke = passwordHasher.HashPassword(noviKorisnik, noviKorisnikDto.Lozinka);
+                
+                if (noviKorisnik.StatusNaloga == 0)
+                    noviKorisnik.StatusNaloga = StatusNaloga.Aktivan;
+
+                if (noviKorisnik.DatumZaposlenja == default)
+                    noviKorisnik.DatumZaposlenja = DateOnly.FromDateTime(DateTime.Now);
+
                 baza.Korisnici.Add(noviKorisnik);
                 await baza.SaveChangesAsync();
+
                 return CreatedAtAction(nameof(DajKorisnika), new { id = noviKorisnik.IdKorisnika }, noviKorisnik);
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { Poruka = "Greska sa spremanjem u bazu", Greska = ex.Message });
             }
-
         }
 
-        //HTTP PUT PO IDU I IZMJENI KORISNIKA
+    
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateKorisnika(int id, [FromBody] Korisnik noviKorisnik)
+        ////[Authorize]
+        public async Task<ActionResult> UpdateKorisnika(int id, [FromBody] AzurirajKorisnikaDto noviPodaci)
         {
             try
             {
-                if (noviKorisnik == null) return BadRequest();
-                var trazeniKorisnik = await baza.Korisnici.FindAsync(id);
+                if (noviPodaci == null)
+                    return BadRequest(new { Poruka = "Podaci su obavezni" });
 
-                if (trazeniKorisnik == null) return NotFound();
+                // Dobij trenutnog korisnika iz tokena
+                var trenutniKorisnikId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var uloga = User.FindFirstValue(ClaimTypes.Role);
 
-                if (!string.IsNullOrWhiteSpace(noviKorisnik.HashLozinke))
+                // Provjeri prava pristupa
+                if (uloga != nameof(RadnoMjesto.Admin) &&
+                    (!int.TryParse(trenutniKorisnikId, out int trenutniId) || trenutniId != id))
                 {
-                    trazeniKorisnik.HashLozinke = passwordHasher.HashPassword(noviKorisnik, noviKorisnik.HashLozinke);
+                    return Forbid(); // Ne možeš mijenjati tuđi profil
                 }
 
-                //kraci nacin za mijenjane vrijednosti u varijablama
-                baza.Entry(trazeniKorisnik).CurrentValues.SetValues(noviKorisnik);
+                var trazeniKorisnik = await baza.Korisnici.FindAsync(id);
+                if (trazeniKorisnik == null)
+                    return NotFound(new { Poruka = "Korisnik nije pronadjen" });
+
+                trazeniKorisnik.Ime = noviPodaci.Ime ?? trazeniKorisnik.Ime;
+                trazeniKorisnik.Prezime = noviPodaci.Prezime ?? trazeniKorisnik.Prezime;
+                trazeniKorisnik.Odjel = Enum.TryParse<Odjel>(noviPodaci.Odjel, out var odjel) ? odjel : Odjel.Proizvodnja;
+                trazeniKorisnik.Telefon = noviPodaci.Telefon ?? trazeniKorisnik.Telefon;
+
+
+                // Samo admin može mijenjati radno mjesto i datum zaposlenja
+                if (uloga == nameof(RadnoMjesto.Admin))
+                {
+                    if (noviPodaci.RadnoMjesto.HasValue)
+                        trazeniKorisnik.RadnoMjesto = noviPodaci.RadnoMjesto.Value;
+
+                    if (noviPodaci.DatumZaposlenja.HasValue)
+                        trazeniKorisnik.DatumZaposlenja = noviPodaci.DatumZaposlenja.Value;
+                }
 
                 await baza.SaveChangesAsync();
-
-                return NoContent();
+                return Ok(new { Poruka = "Korisnik uspješno ažuriran" });
             }
             catch (Exception ex)
             {
@@ -104,19 +178,21 @@ namespace Backend.Controllers
             }
         }
 
-        //HTTP DELETE KORISNIKA PO ID
+        // HTTP DELETE - Obriši korisnika (samo admin)
         [HttpDelete("{id}")]
+        [Authorize(Roles = nameof(RadnoMjesto.Admin))]
         public async Task<IActionResult> ObrisiKorisnika(int id)
         {
             try
             {
                 var trazeniKorisnik = await baza.Korisnici.FindAsync(id);
-                if (trazeniKorisnik == null) return NotFound();
+                if (trazeniKorisnik == null)
+                    return NotFound(new { Poruka = "Korisnik nije pronadjen" });
 
                 baza.Korisnici.Remove(trazeniKorisnik);
                 await baza.SaveChangesAsync();
 
-                return NoContent();
+                return Ok(new { Poruka = "Korisnik uspješno obrisan" });
             }
             catch (Exception ex)
             {
@@ -124,29 +200,31 @@ namespace Backend.Controllers
             }
         }
 
-
-        // DODATNE FUNKCIONALNOSTI
+        // AUTENTIFIKACIJA SA JWT TOKENOM
         [HttpPost("autentifikuj")]
+        [AllowAnonymous]
         public async Task<IActionResult> Autentifikuj([FromBody] AutentifikacijaDto korisnikZaAutentifikaciju)
         {
             try
             {
-
                 if (string.IsNullOrEmpty(korisnikZaAutentifikaciju.Email) &&
                     string.IsNullOrEmpty(korisnikZaAutentifikaciju.KorisnickoIme))
                 {
                     return BadRequest(new { Poruka = "Email ili korisničko ime je obavezno" });
                 }
 
-                Korisnik? korisnikIzBaze = null;
+                if (string.IsNullOrEmpty(korisnikZaAutentifikaciju.Lozinka))
+                {
+                    return BadRequest(new { Poruka = "Lozinka je obavezna" });
+                }
 
+                Korisnik? korisnikIzBaze = null;
 
                 if (!string.IsNullOrEmpty(korisnikZaAutentifikaciju.KorisnickoIme))
                 {
                     korisnikIzBaze = await baza.Korisnici
                         .FirstOrDefaultAsync(k => k.KorisnickoIme == korisnikZaAutentifikaciju.KorisnickoIme);
                 }
-
 
                 if (korisnikIzBaze == null && !string.IsNullOrEmpty(korisnikZaAutentifikaciju.Email))
                 {
@@ -156,7 +234,7 @@ namespace Backend.Controllers
 
                 if (korisnikIzBaze == null)
                 {
-                    return NotFound(new { Poruka = "Korisnik nije pronađen" });
+                    return Unauthorized(new { Poruka = "Pogrešni pristupni podaci" });
                 }
 
                 if (korisnikIzBaze.StatusNaloga != StatusNaloga.Aktivan)
@@ -164,29 +242,37 @@ namespace Backend.Controllers
                     return Unauthorized(new { Poruka = "Korisnički račun nije aktivan" });
                 }
 
-                var odgovorHasiranja = passwordHasher.VerifyHashedPassword(korisnikIzBaze, korisnikIzBaze.HashLozinke, korisnikZaAutentifikaciju.Lozinka);
+                var lozinka = korisnikZaAutentifikaciju.Lozinka?.Trim();
 
-
+                var odgovorHasiranja = passwordHasher.VerifyHashedPassword(
+                    korisnikIzBaze, korisnikIzBaze.HashLozinke, lozinka);
                 if (odgovorHasiranja == PasswordVerificationResult.Success)
                 {
+                    // Generiši JWT token
+                    var token = jwtServis.GenerisiToken(korisnikIzBaze);
+
                     return Ok(new
                     {
                         Poruka = "Autentifikacija uspješna",
-                        IdKorisnika = korisnikIzBaze.IdKorisnika,
-                        Ime = korisnikIzBaze.Ime,
-                        Prezime = korisnikIzBaze.Prezime,
-                        Email = korisnikIzBaze.Email,
-                        KorisnickoIme = korisnikIzBaze.KorisnickoIme,
-                        StatusNaloga = korisnikIzBaze.StatusNaloga,
-                        Telefon = korisnikIzBaze.Telefon,
-                        RadnoMjesto = korisnikIzBaze.RadnoMjesto,
-                        DatumZaposljenja = korisnikIzBaze.DatumZaposlenja,
-                        Odjel = korisnikIzBaze.Odjel,
-                        Napomene = korisnikIzBaze.Napomene
+                        Token = token,
+                        Istice = DateTime.UtcNow.AddHours(1),
+                        Korisnik = new
+                        {
+                            IdKorisnika = korisnikIzBaze.IdKorisnika,
+                            Ime = korisnikIzBaze.Ime,
+                            Prezime = korisnikIzBaze.Prezime,
+                            Email = korisnikIzBaze.Email,
+                            KorisnickoIme = korisnikIzBaze.KorisnickoIme,
+                            StatusNaloga = korisnikIzBaze.StatusNaloga.ToString(),
+                            Telefon = korisnikIzBaze.Telefon,
+                            RadnoMjesto = korisnikIzBaze.RadnoMjesto.ToString(),
+                            DatumZaposljenja = korisnikIzBaze.DatumZaposlenja.ToString("yyyy-MM-dd"),
+                            Odjel = korisnikIzBaze.Odjel
+                        }
                     });
                 }
 
-                return Unauthorized("Pogrešna lozinka");
+                return Unauthorized(new { Poruka = "Pogrešna lozinka" });
             }
             catch (Exception ex)
             {
@@ -194,14 +280,27 @@ namespace Backend.Controllers
             }
         }
 
+        // Promjena lozinke (samo svoj profil ili admin)
         [HttpPut("{id}/promjeniLozinku")]
-        public async Task<IActionResult> PromjeniLozinku(int id, [FromBody] PromjenaLozinkeDto NovaLozinka)
+        //[Authorize]
+        public async Task<IActionResult> PromjeniLozinku(int id, [FromBody] PromjenaLozinkeDto novaLozinka)
         {
             try
             {
-                if (NovaLozinka == null || string.IsNullOrEmpty(NovaLozinka.NovaLozinka))
+                if (novaLozinka == null || string.IsNullOrEmpty(novaLozinka.NovaLozinka))
                 {
                     return BadRequest(new { Poruka = "Nova lozinka je obavezna" });
+                }
+
+                // Dobij trenutnog korisnika iz tokena
+                var trenutniKorisnikId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var uloga = User.FindFirstValue(ClaimTypes.Role);
+
+                // Provjeri prava pristupa
+                if (uloga != nameof(RadnoMjesto.Admin) &&
+                    (!int.TryParse(trenutniKorisnikId, out int trenutniId) || trenutniId != id))
+                {
+                    return Forbid(); // Ne možeš mijenjati tuđu lozinku
                 }
 
                 var korisnikIzBaze = await baza.Korisnici.FindAsync(id);
@@ -209,7 +308,20 @@ namespace Backend.Controllers
                 {
                     return NotFound(new { Poruka = "Korisnik nije pronaden" });
                 }
-                korisnikIzBaze.HashLozinke = passwordHasher.HashPassword(korisnikIzBaze, NovaLozinka.NovaLozinka);
+
+                // Provjeri staru lozinku ako nije admin
+                if (uloga != nameof(RadnoMjesto.Admin) && !string.IsNullOrEmpty(novaLozinka.NovaLozinka))
+                {
+                    var provjeraStare = passwordHasher.VerifyHashedPassword(
+                        korisnikIzBaze, korisnikIzBaze.HashLozinke, novaLozinka.NovaLozinka);
+
+                    if (provjeraStare != PasswordVerificationResult.Success)
+                    {
+                        return Unauthorized(new { Poruka = "Stara lozinka nije ispravna" });
+                    }
+                }
+
+                korisnikIzBaze.HashLozinke = passwordHasher.HashPassword(korisnikIzBaze, novaLozinka.NovaLozinka);
                 await baza.SaveChangesAsync();
 
                 return Ok(new { Poruka = "Uspješno izmjenjena lozinka" });
@@ -220,14 +332,25 @@ namespace Backend.Controllers
             }
         }
 
+        // Ažuriranje kontakta (samo svoj profil)
         [HttpPut("{id}/azurirajKontakt")]
+        //[Authorize]
         public async Task<IActionResult> AzurirajKontakt(int id, [FromBody] AzurirajKontaktDto noviKontakti)
         {
             try
             {
                 if (noviKontakti == null)
                 {
-                    return BadRequest(new { Poruka = "Novi kontakti su obavezna" });
+                    return BadRequest(new { Poruka = "Novi kontakti su obavezni" });
+                }
+
+                // Dobij trenutnog korisnika iz tokena
+                var trenutniKorisnikId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                // Korisnik može mijenjati samo svoje kontakte
+                if (!int.TryParse(trenutniKorisnikId, out int trenutniId) || trenutniId != id)
+                {
+                    return Forbid();
                 }
 
                 var korisnikIzBaze = await baza.Korisnici.FindAsync(id);
@@ -235,11 +358,26 @@ namespace Backend.Controllers
                 {
                     return NotFound(new { Poruka = "Korisnik nije pronaden" });
                 }
-                korisnikIzBaze.Email = noviKontakti.Email;
-                korisnikIzBaze.Telefon = noviKontakti.Telefon;
+
+                // Provjeri da li email već postoji
+                if (!string.IsNullOrEmpty(noviKontakti.Email) &&
+                    noviKontakti.Email != korisnikIzBaze.Email)
+                {
+                    var postojiEmail = await baza.Korisnici
+                        .AnyAsync(k => k.Email == noviKontakti.Email && k.IdKorisnika != id);
+
+                    if (postojiEmail)
+                    {
+                        return BadRequest(new { Poruka = "Email već postoji" });
+                    }
+                }
+
+                korisnikIzBaze.Email = noviKontakti.Email ?? korisnikIzBaze.Email;
+                korisnikIzBaze.Telefon = noviKontakti.Telefon ?? korisnikIzBaze.Telefon;
+
                 await baza.SaveChangesAsync();
 
-                return Ok(new { Poruka = "Uspješno izmjenjena kontakata" });
+                return Ok(new { Poruka = "Uspješno izmjenjeni kontakti" });
             }
             catch (Exception ex)
             {
@@ -247,21 +385,23 @@ namespace Backend.Controllers
             }
         }
 
+        // Deaktiviraj nalog (samo admin)
         [HttpPut("{id}/deaktivirajNalog")]
-        public async Task<ActionResult<Korisnik>> deaktivirajNalog(int id)
+        [Authorize(Roles = nameof(RadnoMjesto.Admin))]
+        public async Task<ActionResult> DeaktivirajNalog(int id)
         {
             try
             {
                 var trazeniKorisnik = await baza.Korisnici.FindAsync(id);
                 if (trazeniKorisnik == null)
                 {
-                    return NotFound();
+                    return NotFound(new { Poruka = "Korisnik nije pronadjen" });
                 }
 
                 trazeniKorisnik.StatusNaloga = StatusNaloga.Neaktivan;
                 await baza.SaveChangesAsync();
 
-                return Ok(new { Poruka = "Uspješno izmjenjena statusa naloga" });
+                return Ok(new { Poruka = "Uspješno deaktiviran nalog" });
             }
             catch (Exception ex)
             {
@@ -269,5 +409,71 @@ namespace Backend.Controllers
             }
         }
 
+        // Aktiviraj nalog (samo admin)
+        [HttpPut("{id}/aktivirajNalog")]
+        [Authorize(Roles = nameof(RadnoMjesto.Admin))]
+        public async Task<ActionResult> AktivirajNalog(int id)
+        {
+            try
+            {
+                var trazeniKorisnik = await baza.Korisnici.FindAsync(id);
+                if (trazeniKorisnik == null)
+                {
+                    return NotFound(new { Poruka = "Korisnik nije pronadjen" });
+                }
+
+                trazeniKorisnik.StatusNaloga = StatusNaloga.Aktivan;
+                await baza.SaveChangesAsync();
+
+                return Ok(new { Poruka = "Uspješno aktiviran nalog" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Poruka = "Greska sa spremanjem u bazu", Greska = ex.Message });
+            }
+        }
+
+        // Odjava
+        [HttpPost("odjava")]
+        //[Authorize]
+        public IActionResult Odjava()
+        {
+            return Ok(new { Poruka = "Odjava uspješna" });
+        }
+
+        // Refresh token
+        [HttpPost("refresh")]
+        //[Authorize]
+        public async Task<IActionResult> RefreshToken()
+        {
+            try
+            {
+                var trenutniKorisnikId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (!int.TryParse(trenutniKorisnikId, out int id))
+                {
+                    return Unauthorized();
+                }
+
+                var korisnik = await baza.Korisnici.FindAsync(id);
+                if (korisnik == null || korisnik.StatusNaloga != StatusNaloga.Aktivan)
+                {
+                    return Unauthorized();
+                }
+
+                // Generiši novi token
+                var noviToken = jwtServis.GenerisiToken(korisnik);
+
+                return Ok(new
+                {
+                    Token = noviToken,
+                    Istice = DateTime.UtcNow.AddHours(1)
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Poruka = "Greska pri osvježavanju tokena", Greska = ex.Message });
+            }
+        }
     }
 }

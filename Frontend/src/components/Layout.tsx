@@ -62,7 +62,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Left Navigation */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex-shrink-0">
+      <aside className="w-64 bg-white border-r border-gray-200 shrink-0">
         {/* Logo */}
         <div className="h-16 border-b border-gray-200 flex items-center px-6">
           <div className="flex items-center gap-3">
@@ -105,7 +105,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 flex-shrink-0">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shrink-0">
           {/* Page title and breadcrumb */}
           <div className="flex items-center gap-2">
             <h2 className="text-gray-900">{pageTitle[currentPage]}</h2>

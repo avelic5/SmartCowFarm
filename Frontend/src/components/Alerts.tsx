@@ -179,7 +179,7 @@ export function Alerts({ onNavigate }: AlertsProps) {
               className={`bg-white rounded-xl p-6 border-l-4 ${config.color} shadow-sm hover:shadow-md transition-all`}
             >
               <div className="flex items-start gap-4">
-                <div className={`w-10 h-10 ${config.icon} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                <div className={`w-10 h-10 ${config.icon} rounded-lg flex items-center justify-center shrink-0`}>
                   <AlertTriangle className="w-5 h-5 text-white" />
                 </div>
                 

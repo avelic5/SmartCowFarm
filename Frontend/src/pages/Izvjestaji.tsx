@@ -98,8 +98,6 @@ export function Izvjestaji() {
       const odDatum = formatDateForApi(new Date(startMs));
       const doDatum = formatDateForApi(new Date(endMs));
 
-      console.log(`Downloading PDF: type=${type}, period=${periodType}, od=${odDatum}, do=${doDatum}`);
-
       let url: string;
       let body: string | null = null;
 
@@ -171,8 +169,6 @@ export function Izvjestaji() {
         } else if (match && match[1]) {
           fileName = match[1].trim();
         }
-      } else {
-        console.warn('Content-Disposition header nije pronađen');
       }
 
       const downloadUrl = window.URL.createObjectURL(blob);
@@ -836,7 +832,6 @@ export function Izvjestaji() {
               if (title.includes('Senzori')) return 'sensors';
               return 'monthly-prod';
             };
-            console.log(r.title);
 
             const reportType = determineReportType(r.title);
 

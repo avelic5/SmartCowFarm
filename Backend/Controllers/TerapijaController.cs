@@ -4,11 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Backend.Controllers.Dtos;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[Authorize]
     public class TerapijaController : ControllerBase
     {
         private readonly SmartCowFarmDatabaseContext baza;
@@ -19,6 +21,7 @@ namespace Backend.Controllers
 
         // HTTP GET – sve terapije
         [HttpGet]
+        //[Authorize]
         public async Task<ActionResult<List<Terapija>>> DajTerapije()
         {
             try
@@ -33,6 +36,7 @@ namespace Backend.Controllers
 
         // HTTP GET – jedna terapija po id
         [HttpGet("{id}")]
+        //[Authorize]
         public async Task<ActionResult<Terapija>> DajTerapiju(int id)
         {
             try
@@ -50,6 +54,7 @@ namespace Backend.Controllers
 
         // POST – kreiranje terapije
         [HttpPost]
+        //[Authorize]
         public async Task<ActionResult<Terapija>> KreirajTerapiju([FromBody] Terapija novaTerapija)
         {
             try
@@ -70,6 +75,7 @@ namespace Backend.Controllers
 
         // PUT – update terapije
         [HttpPut("{id}")]
+        //[Authorize]
         public async Task<ActionResult> UpdateTerapija(int id, [FromBody] Terapija novaTerapija)
         {
             try
@@ -93,6 +99,7 @@ namespace Backend.Controllers
 
         // DELETE – brisanje terapije
         [HttpDelete("{id}")]
+        //[Authorize]
         public async Task<IActionResult> ObrisiTerapiju(int id)
         {
             try
@@ -112,6 +119,7 @@ namespace Backend.Controllers
         }
 
         [HttpPut("{id}/promjeniDoza")]
+        //[Authorize]
         public async Task<ActionResult> PromjeniDoza(int id, [FromBody] PromjeniDozuDto dto)
         {
             try
@@ -149,6 +157,7 @@ namespace Backend.Controllers
         }
 
         [HttpPut("{id}/zakaziPeriod")]
+        //[Authorize]
         public async Task<ActionResult> ZakaziPeriod(int id, [FromBody] ZakaziPeriodDto dto)
         {
             try
@@ -194,6 +203,7 @@ namespace Backend.Controllers
         }
 
         [HttpPut("{id}/dodajUputstvo")]
+        //[Authorize]
         public async Task<ActionResult> DodajUputstvo(int id, [FromBody] TekstDto dto)
         {
             try
@@ -228,6 +238,7 @@ namespace Backend.Controllers
         }
 
         [HttpPost("{id}/kreirajAplikaciju")]
+        //[Authorize]
         public async Task<ActionResult> KreirajAplikaciju(int id, [FromBody] KreirajAplikacijuDto dto)
         {
             try

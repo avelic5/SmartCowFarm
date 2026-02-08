@@ -1,6 +1,11 @@
 using Backend.Data;
+using Backend.Models;
 using Backend.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace Backend;
 
@@ -10,22 +15,53 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
         builder.Services.AddControllers()
             .AddJsonOptions(o =>
             {
                 o.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
             });
 
+        // CORS konfiguracija
         builder.Services.AddCors(options =>
         {
-            options.AddDefaultPolicy(policy =>
-                policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod().WithExposedHeaders("Content-Disposition"));
+            options.AddPolicy("AllowReact",
+                policy =>
+                {
+                    policy.WithOrigins("http://localhost:3000") // React dev server
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials()
+                        .WithExposedHeaders("Content-Disposition")
+                        .SetPreflightMaxAge(TimeSpan.FromHours(24));
+                });
         });
-        // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-        builder.Services.AddOpenApi();
 
-        // Dodaj ovo u Program.cs
+        builder.Services.AddScoped<IJwtServis, JwtServis>();
+        builder.Services.AddScoped<IPasswordHasher<Korisnik>, PasswordHasher<Korisnik>>();
+
+        builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "Backend",
+                ValidAudience = builder.Configuration["Jwt:Audience"] ?? "Frontend",
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ??
+                    "ovaj-kljuc-mora-biti-minimum-32-karaktera-dugacak-123"))
+            };
+        });
+
+        builder.Services.AddOpenApi();
+        builder.Services.AddAuthorization();
         builder.Services.AddScoped<QuestPdfGenerator>();
 
         // baza
@@ -40,11 +76,10 @@ public class Program
         {
             app.MapOpenApi();
         }
+        // CORS middleware
+        app.UseCors("AllowReact");
 
-        app.UseHttpsRedirection();
-
-        app.UseCors();
-
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapControllers();

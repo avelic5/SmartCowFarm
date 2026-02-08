@@ -1,14 +1,15 @@
 using Backend.Data;
 using Backend.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Backend.Controllers.Dtos;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[Authorize]
     public class TerapijaAplikacijeController : ControllerBase
     {
         private readonly SmartCowFarmDatabaseContext baza;
@@ -19,6 +20,7 @@ namespace Backend.Controllers
 
         // HTTP GET – sve terapije aplikacije
         [HttpGet]
+        //[Authorize]
         public async Task<ActionResult<List<TerapijaAplikacije>>> DajTerapijeAplikacije()
         {
             try
@@ -33,6 +35,7 @@ namespace Backend.Controllers
 
         // HTTP GET – jedna terapija aplikacije po id
         [HttpGet("{id}")]
+        //[Authorize]
         public async Task<ActionResult<TerapijaAplikacije>> DajTerapijuAplikacije(int id)
         {
             try
@@ -50,6 +53,7 @@ namespace Backend.Controllers
 
         // POST – kreiranje terapije aplikacije
         [HttpPost]
+        //[Authorize]
         public async Task<ActionResult<TerapijaAplikacije>> KreirajTerapijuAplikacije(
             [FromBody] TerapijaAplikacije novaTerapijaAplikacije)
         {
@@ -75,6 +79,7 @@ namespace Backend.Controllers
 
         // PUT – update terapije aplikacije
         [HttpPut("{id}")]
+        //[Authorize]
         public async Task<ActionResult> UpdateTerapijaAplikacije(
             int id,
             [FromBody] TerapijaAplikacije novaTerapijaAplikacije)
@@ -99,6 +104,7 @@ namespace Backend.Controllers
 
         // DELETE – brisanje terapije aplikacije
         [HttpDelete("{id}")]
+        //[Authorize]
         public async Task<IActionResult> ObrisiTerapijuAplikacije(int id)
         {
             try
@@ -119,6 +125,7 @@ namespace Backend.Controllers
 
         //DODATNE FUNKCIJE
         [HttpPut("{id}/primjeni")]
+        //[Authorize]
         public async Task<IActionResult> Primjeni(int id, [FromBody] KolicinaDto novaKolicina)
         {
             try
@@ -159,6 +166,7 @@ namespace Backend.Controllers
         }
 
         [HttpPut("{id}/potvrdiIzvrsenje")]
+        //[Authorize]
         public async Task<IActionResult> PotvrdiIzvrsenje(int id, [FromBody] IzvrsilacDto izvrsilac)
         {
             try

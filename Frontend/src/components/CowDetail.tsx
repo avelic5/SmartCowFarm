@@ -330,7 +330,7 @@ export function CowDetail({ cowId, onNavigate }: CowDetailProps) {
             {alerts.map(alert => (
               <div key={alert.id} className="p-6 hover:bg-gray-50 transition-colors">
                 <div className="flex items-start gap-4">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
                     alert.severity === 'warning' ? 'bg-amber-100' : 'bg-red-100'
                   }`}>
                     <AlertTriangle className={`w-5 h-5 ${

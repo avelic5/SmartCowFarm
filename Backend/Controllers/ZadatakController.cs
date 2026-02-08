@@ -6,11 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 using Backend.Models.Enums;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Backend.Controllers.Dtos;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[Authorize]
     public class ZadatakController : ControllerBase
     {
         private readonly SmartCowFarmDatabaseContext baza;
@@ -21,6 +23,7 @@ namespace Backend.Controllers
 
         // HTTP GET – svi zadaci
         [HttpGet]
+        //[Authorize]
         public async Task<ActionResult<List<Zadatak>>> DajZadatke()
         {
             try
@@ -35,6 +38,7 @@ namespace Backend.Controllers
 
         // HTTP GET – jedan zadatak po id
         [HttpGet("{id}")]
+        //[Authorize]
         public async Task<ActionResult<Zadatak>> DajZadatak(int id)
         {
             try
@@ -52,6 +56,7 @@ namespace Backend.Controllers
 
         // POST – kreiranje zadatka
         [HttpPost]
+        //[Authorize]
         public async Task<ActionResult<Zadatak>> KreirajZadatak([FromBody] Zadatak noviZadatak)
         {
             try
@@ -74,6 +79,7 @@ namespace Backend.Controllers
 
         // PUT – update zadatka
         [HttpPut("{id}")]
+        //[Authorize]
         public async Task<ActionResult> UpdateZadatak(int id, [FromBody] Zadatak noviZadatak)
         {
             try
@@ -96,6 +102,7 @@ namespace Backend.Controllers
 
         // DELETE – brisanje zadatka
         [HttpDelete("{id}")]
+        //[Authorize]
         public async Task<IActionResult> ObrisiZadatak(int id)
         {
             try
@@ -116,6 +123,7 @@ namespace Backend.Controllers
 
         // DODATNE FUNKCIONALNOSTI
         [HttpPut("{id}/zapocniZadatak")]
+        //[Authorize]
         public async Task<IActionResult> ZapocniZadatak(int id)
         {
             try
@@ -150,6 +158,7 @@ namespace Backend.Controllers
         }
 
         [HttpPut("{id}/zavrsiZadatak")]
+        //[Authorize]
         public async Task<IActionResult> ZavrsiZadatak(int id)
         {
             try
@@ -191,6 +200,7 @@ namespace Backend.Controllers
         }
 
         [HttpPut("{id}/promjeniPrioritet")]
+        //[Authorize]
         public async Task<IActionResult> PromjeniPrioritet(int id, [FromBody] PromjeniPrioritetDto noviPrioritet)
         {
             try
@@ -231,6 +241,7 @@ namespace Backend.Controllers
         }
 
         [HttpPut("{id}/dodajResurs")]
+        //[Authorize]
         public async Task<IActionResult> DodajResurs(int id, [FromBody] TekstDto noviResurs)
         {
             try
@@ -271,6 +282,7 @@ namespace Backend.Controllers
         }
 
         [HttpPut("{id}/dodajKomentar")]
+        //[Authorize]
         public async Task<IActionResult> DodajKomentar(int id, [FromBody] TekstDto noviKomentar)
         {
             try

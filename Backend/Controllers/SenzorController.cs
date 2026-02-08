@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Backend.Controllers.Dtos;
 using Backend.Models.Enums;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers
 {

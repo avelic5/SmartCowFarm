@@ -4,11 +4,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Backend.Models;
 using Backend.Controllers.Dtos;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[Authorize]
     public class KravaController : ControllerBase
     {
         private readonly SmartCowFarmDatabaseContext baza;
@@ -32,6 +34,7 @@ namespace Backend.Controllers
 
         //HTTP DAJ KRAVU PO IDU
         [HttpGet("{id}")]
+        //[Authorize]
         public async Task<ActionResult<Krava>> DajKravu(int id)
         {
             try
@@ -50,8 +53,8 @@ namespace Backend.Controllers
             }
         }
 
-        //POST
         [HttpPost]
+        //[Authorize]
         public async Task<ActionResult<Krava>> KreirajKravu([FromBody] Krava novaKrava)
         {
             try
@@ -73,6 +76,7 @@ namespace Backend.Controllers
 
         //HTTP PUT PO IDU I IZMJENI KRAVU
         [HttpPut("{id}")]
+        //[Authorize]
         public async Task<ActionResult> UpdateKravu(int id, [FromBody] Krava novaKrava)
         {
             try
@@ -97,6 +101,7 @@ namespace Backend.Controllers
 
         //HTTP DELETE kravu PO ID
         [HttpDelete("{id}")]
+        //[Authorize]
         public async Task<IActionResult> ObrisiKravu(int id)
         {
             try
@@ -116,6 +121,7 @@ namespace Backend.Controllers
         }
 
         [HttpGet("{id}/izracunajStarost")]
+        //[Authorize]
         public async Task<ActionResult<double>> IzracunajStarost(int id)
         {
             try
@@ -143,6 +149,7 @@ namespace Backend.Controllers
         }
 
         [HttpPut("{id}/promjeniStatus")]
+        //[Authorize]
         public async Task<ActionResult> PromjeniStatus(int id, [FromBody] PromjeniStatusDto statusDto)
         {
             try
@@ -210,6 +217,7 @@ namespace Backend.Controllers
         }
 
         [HttpPut("{id}/dodaj-napomenu")]
+        //[Authorize]
         public async Task<ActionResult> DodajNapomenu(int id, [FromBody] TekstDto napomenaDto)
         {
             try
@@ -245,8 +253,8 @@ namespace Backend.Controllers
             }
         }
 
-        // 4. PROSJEČNA PROIZVODNJA KRAVE
         [HttpGet("{id}/prosjecnaProizvodnja")]
+        //[Authorize]
         public async Task<ActionResult<double>> ProsjecnaProizvodnja(int id)
         {
             try
@@ -290,6 +298,7 @@ namespace Backend.Controllers
         }
 
         [HttpPost("{id}/dodajMuzuKravi")]
+        //[Authorize]
         public async Task<ActionResult> DodajMuzu(int id, [FromBody] DodajMuzuDto muzaDto)
         {
             try
@@ -315,7 +324,6 @@ namespace Backend.Controllers
                     });
                 }
 
-                // Kreiranje nove mužnje
                 var novaMuza = new Muza
                 {
                     IdKrave = id,
@@ -331,9 +339,7 @@ namespace Backend.Controllers
                     OznakaOdstupanja = muzaDto.OznakaOdstupanja ?? "NORMALNO",
                     Napomena = muzaDto.Napomena ?? ""
                 };
-
-
-                // Dodaj napomenu o mužnji
+                
                 if (!string.IsNullOrWhiteSpace(muzaDto.Napomena))
                 {
                     krava.Napomene += (string.IsNullOrEmpty(krava.Napomene) ? "" : "\n") +

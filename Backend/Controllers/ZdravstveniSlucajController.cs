@@ -4,11 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Backend.Controllers.Dtos;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[Authorize]
     public class ZdravstveniSlucajController : ControllerBase
     {
         private readonly SmartCowFarmDatabaseContext baza;
@@ -19,6 +21,7 @@ namespace Backend.Controllers
 
         // HTTP GET – svi zdravstveni slučajevi
         [HttpGet]
+        //[Authorize]
         public async Task<ActionResult<List<ZdravstveniSlucaj>>> DajZdravstveneSlucajeve()
         {
             try
@@ -33,6 +36,7 @@ namespace Backend.Controllers
 
         // HTTP GET – jedan zdravstveni slučaj po id
         [HttpGet("{id}")]
+        //[Authorize]
         public async Task<ActionResult<ZdravstveniSlucaj>> DajZdravstveniSlucaj(int id)
         {
             try
@@ -50,6 +54,7 @@ namespace Backend.Controllers
 
         // POST – kreiranje zdravstvenog slučaja
         [HttpPost]
+        //[Authorize]
         public async Task<ActionResult<ZdravstveniSlucaj>> KreirajZdravstveniSlucaj(
             [FromBody] ZdravstveniSlucaj noviSlucaj)
         {
@@ -73,6 +78,7 @@ namespace Backend.Controllers
 
         // PUT – update zdravstvenog slučaja
         [HttpPut("{id}")]
+        //[Authorize]
         public async Task<ActionResult> UpdateZdravstveniSlucaj(
             int id,
             [FromBody] ZdravstveniSlucaj noviSlucaj)
@@ -97,6 +103,7 @@ namespace Backend.Controllers
 
         // DELETE – brisanje zdravstvenog slučaja
         [HttpDelete("{id}")]
+        //[Authorize]
         public async Task<IActionResult> ObrisiZdravstveniSlucaj(int id)
         {
             try
@@ -117,6 +124,7 @@ namespace Backend.Controllers
         // DODATNE FUNCKIONALNOSTI
 
         [HttpPut("{id}/otvoriSlucaj")]
+        //[Authorize]
         public async Task<IActionResult> OtvoriSlucaj(int id, [FromBody] ZdravstveniSlucajDto noviZdravstveniSlucaj)
         {
             try
@@ -198,6 +206,7 @@ namespace Backend.Controllers
         }
 
         [HttpPut("{id}/zatvoriSlucaj")]
+        //[Authorize]
         public async Task<IActionResult> ZatvoriSlucaj(int id, [FromBody] ZatvoriSlucajDto zatvoriDto)
         {
             try
@@ -246,6 +255,7 @@ namespace Backend.Controllers
         }
 
         [HttpPut("{id}/dodajSimptom")]
+        //[Authorize]
         public async Task<IActionResult> DodajSimptom(int id, [FromBody] DodajSimptomDto simptomDto)
         {
             try
@@ -291,6 +301,7 @@ namespace Backend.Controllers
         }
 
         [HttpPut("{id}/dodajTerapiju")]
+        //[Authorize]
         public async Task<IActionResult> DodajTerapiju(int id, [FromBody] DodajTerapijuDto terapijaDto)
         {
             try
@@ -354,6 +365,7 @@ namespace Backend.Controllers
         }
 
         [HttpPut("{id}/dodajNapomenu")]
+        //[Authorize]
         public async Task<IActionResult> DodajNapomenu(int id, [FromBody] TekstDto napomenaDto)
         {
             try
