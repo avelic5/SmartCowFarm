@@ -3,8 +3,7 @@ import { Calendar, Download, FileText, Filter, LineChart as LineIcon, Printer, S
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useData } from '../context/DataContext';
 import { useSettings } from '../context/SettingsContext';
-import { api } from '../api/index'
-import {getApiBaseUrl} from '../api/http'
+import { BACKEND_URL } from '@/utils/api';
 
 function formatDdMm(date: Date): string {
   return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -88,7 +87,6 @@ export function Izvjestaji() {
     setError(null);
 
     try {
-      const API_BASE = getApiBaseUrl();
 
       // Koristi calculatePeriod funkciju
       const period = calculatePeriod(periodType);
@@ -105,19 +103,19 @@ export function Izvjestaji() {
         if (!selectedEntity) {
           throw new Error('Odaberite kravu za karton');
         }
-        url = `${API_BASE}/api/Izvjestaji/kartonKrave/${selectedEntity}`;
+        url = `${BACKEND_URL}/api/Izvjestaji/kartonKrave/${selectedEntity}`;
         body = null;
 
       } else if (type === 'monthly-prod') {
-        url = `${API_BASE}/api/Izvjestaji/mjesecnaProizvodnja`;
+        url = `${BACKEND_URL}/api/Izvjestaji/mjesecnaProizvodnja`;
         body = JSON.stringify({ odDatum, doDatum });
 
       } else if (type === 'health') {
-        url = `${API_BASE}/api/Izvjestaji/zdravstveniIzvjestaj`;
+        url = `${BACKEND_URL}/api/Izvjestaji/zdravstveniIzvjestaj`;
         body = JSON.stringify({ odDatum, doDatum });
 
       } else if (type === 'sensors') {
-        url = `${API_BASE}/api/Izvjestaji/izvjestajSenzora`;
+        url = `${BACKEND_URL}/api/Izvjestaji/izvjestajSenzora`;
         body = JSON.stringify({ odDatum, doDatum });
 
       } else {
@@ -194,8 +192,6 @@ export function Izvjestaji() {
     setError(null);
 
     try {
-      const API_BASE = getApiBaseUrl();
-
       // Koristi calculatePeriod funkciju
       const period = calculatePeriod(periodType);
       const startMs = period.startMs;
@@ -212,15 +208,15 @@ export function Izvjestaji() {
 
       if (type === 'cow-card') {
         if (!selectedEntity) throw new Error('Odaberite kravu za karton');
-        url = `${API_BASE}/api/Izvjestaji/kartonKrave/${selectedEntity}`;
+        url = `${BACKEND_URL}/api/Izvjestaji/kartonKrave/${selectedEntity}`;
       } else if (type === 'monthly-prod') {
-        url = `${API_BASE}/api/Izvjestaji/mjesecnaProizvodnja`;
+        url = `${BACKEND_URL}/api/Izvjestaji/mjesecnaProizvodnja`;
         fetchOptions.body = JSON.stringify({ odDatum, doDatum });
       } else if (type === 'health') {
-        url = `${API_BASE}/api/Izvjestaji/zdravstveniIzvjestaj`;
+        url = `${BACKEND_URL}/api/Izvjestaji/zdravstveniIzvjestaj`;
         fetchOptions.body = JSON.stringify({ odDatum, doDatum });
       } else if (type === 'sensors') {
-        url = `${API_BASE}/api/Izvjestaji/izvjestajSenzora`;
+        url = `${BACKEND_URL}/api/Izvjestaji/izvjestajSenzora`;
         fetchOptions.body = JSON.stringify({ odDatum, doDatum });
       } else {
         throw new Error('Odaberite tip izvještaja');
