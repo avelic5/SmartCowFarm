@@ -31,7 +31,6 @@ namespace Backend.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = nameof(RadnoMjesto.Admin))]
         public async Task<ActionResult<List<Korisnik>>> DajKorisnike()
         {
             try
@@ -180,7 +179,6 @@ namespace Backend.Controllers
 
         // HTTP DELETE - Obriši korisnika (samo admin)
         [HttpDelete("{id}")]
-        [Authorize(Roles = nameof(RadnoMjesto.Admin))]
         public async Task<IActionResult> ObrisiKorisnika(int id)
         {
             try
@@ -387,7 +385,6 @@ namespace Backend.Controllers
 
         // Deaktiviraj nalog (samo admin)
         [HttpPut("{id}/deaktivirajNalog")]
-        [Authorize(Roles = nameof(RadnoMjesto.Admin))]
         public async Task<ActionResult> DeaktivirajNalog(int id)
         {
             try
@@ -411,7 +408,6 @@ namespace Backend.Controllers
 
         // Aktiviraj nalog (samo admin)
         [HttpPut("{id}/aktivirajNalog")]
-        [Authorize(Roles = nameof(RadnoMjesto.Admin))]
         public async Task<ActionResult> AktivirajNalog(int id)
         {
             try

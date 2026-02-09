@@ -11,14 +11,13 @@ import './index.css';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <SettingsProvider>
-        <AuthProvider>
-          <DataProvider>
+      <AuthProvider>
+        <DataProvider>
+          <SettingsProvider>
             <App />
-          </DataProvider>
-        </AuthProvider>
-      </SettingsProvider>
+          </SettingsProvider>
+        </DataProvider>
+      </AuthProvider>
     </BrowserRouter>
   </StrictMode>
 );
-  

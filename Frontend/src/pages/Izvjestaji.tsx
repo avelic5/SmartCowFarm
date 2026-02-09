@@ -103,19 +103,19 @@ export function Izvjestaji() {
         if (!selectedEntity) {
           throw new Error('Odaberite kravu za karton');
         }
-        url = `${BACKEND_URL}/api/Izvjestaji/kartonKrave/${selectedEntity}`;
+        url = `${BACKEND_URL}Izvjestaji/kartonKrave/${selectedEntity}`;
         body = null;
 
       } else if (type === 'monthly-prod') {
-        url = `${BACKEND_URL}/api/Izvjestaji/mjesecnaProizvodnja`;
+        url = `${BACKEND_URL}/Izvjestaji/mjesecnaProizvodnja`;
         body = JSON.stringify({ odDatum, doDatum });
 
       } else if (type === 'health') {
-        url = `${BACKEND_URL}/api/Izvjestaji/zdravstveniIzvjestaj`;
+        url = `${BACKEND_URL}/Izvjestaji/zdravstveniIzvjestaj`;
         body = JSON.stringify({ odDatum, doDatum });
 
       } else if (type === 'sensors') {
-        url = `${BACKEND_URL}/api/Izvjestaji/izvjestajSenzora`;
+        url = `${BACKEND_URL}/Izvjestaji/izvjestajSenzora`;
         body = JSON.stringify({ odDatum, doDatum });
 
       } else {

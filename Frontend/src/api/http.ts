@@ -1,3 +1,4 @@
+import { BACKEND_URL } from "@/utils/api";
 
 export class ApiError extends Error {
   status: number;
@@ -11,7 +12,7 @@ export class ApiError extends Error {
   }
 }
 
-// ISPRAVKA: Vite koristi MODE, ne DEV
+/*// ISPRAVKA: Vite koristi MODE, ne DEV
 export function getApiBaseUrl() {
   const configured = import.meta.env.VITE_API_BASE_URL as string | undefined;
 
@@ -26,13 +27,14 @@ export function getApiBaseUrl() {
 
   // Production - prazan za relativne putanje
   return "";
-}
+}*/
 
+// http.ts
 export async function apiFetch<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
-  const baseUrl = getApiBaseUrl();
+  const baseUrl = BACKEND_URL;
   const normalizedPath =
     baseUrl.endsWith("/api") && path.startsWith("/api/")
       ? path.slice("/api".length)
@@ -42,6 +44,12 @@ export async function apiFetch<T>(
 
   const headers = new Headers(init?.headers);
   headers.set("Accept", "application/json");
+
+  // DODAJ AUTHORIZATION HEADER
+  const token = localStorage.getItem("token");
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
 
   if (init?.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");

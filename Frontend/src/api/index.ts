@@ -15,28 +15,28 @@ import type {
 
 export const api = {
   krave: {
-    list: () => apiFetch<KravaDto[]>("/api/Krava"),
-    get: (id: number) => apiFetch<KravaDto>(`/api/Krava/${id}`),
+    list: () => apiFetch<KravaDto[]>("/Krava"),
+    get: (id: number) => apiFetch<KravaDto>(`/Krava/${id}`),
     create: (payload: Omit<KravaDto, "idKrave">) =>
-      apiFetch<KravaDto>("/api/Krava", {
+      apiFetch<KravaDto>("/Krava", {
         method: "POST",
         body: JSON.stringify(payload),
       }),
     update: (id: number, payload: KravaDto) =>
-      apiFetch<void>(`/api/Krava/${id}`, {
+      apiFetch<void>(`/Krava/${id}`, {
         method: "PUT",
         body: JSON.stringify(payload),
       }),
     delete: (id: number) =>
-      apiFetch<void>(`/api/Krava/${id}`, { method: "DELETE" }),
+      apiFetch<void>(`/Krava/${id}`, { method: "DELETE" }),
   },
   muze: {
-    list: () => apiFetch<MuzaDto[]>("/api/Muza"),
+    list: () => apiFetch<MuzaDto[]>("/Muza"),
   },
   upozorenja: {
-    list: () => apiFetch<UpozorenjeDto[]>("/api/Upozorenje"),
+    list: () => apiFetch<UpozorenjeDto[]>("/Upozorenje"),
     update: (id: number, payload: UpozorenjeDto) =>
-      apiFetch<void>(`/api/Upozorenje/${id}`, {
+      apiFetch<void>(`/Upozorenje/${id}`, {
         method: "PUT",
         body: JSON.stringify(payload),
       }),
@@ -44,54 +44,54 @@ export const api = {
   zadaci: {
     list: () => apiFetch<ZadatakDto[]>("/api/Zadatak"),
     update: (id: number, payload: ZadatakDto) =>
-      apiFetch<void>(`/api/Zadatak/${id}`, {
+      apiFetch<void>(`/Zadatak/${id}`, {
         method: "PUT",
         body: JSON.stringify(payload),
       }),
   },
   korisnici: {
-    list: () => apiFetch<KorisnikDto[]>("/api/Korisnik"),
-    get: (id: number) => apiFetch<KorisnikDto>(`/api/Korisnik/${id}`),
+    list: () => apiFetch<KorisnikDto[]>("/Korisnik"),
+    get: (id: number) => apiFetch<KorisnikDto>(`/Korisnik/${id}`),
   },
   senzori: {
-    list: () => apiFetch<SenzorDto[]>("/api/Senzor"),
+    list: () => apiFetch<SenzorDto[]>("/Senzor"),
   },
   ocitanjaSenzora: {
-    list: () => apiFetch<OcitanjeSenzoraDto[]>("/api/OcitanjeSenzora"),
+    list: () => apiFetch<OcitanjeSenzoraDto[]>("/OcitanjeSenzora"),
   },
   zdravstveniSlucajevi: {
-    list: () => apiFetch<ZdravstveniSlucajDto[]>("/api/ZdravstveniSlucaj"),
+    list: () => apiFetch<ZdravstveniSlucajDto[]>("/ZdravstveniSlucaj"),
   },
   terapije: {
-    list: () => apiFetch<TerapijaDto[]>("/api/Terapija"),
+    list: () => apiFetch<TerapijaDto[]>("/Terapija"),
   },
   terapijeAplikacije: {
-    list: () => apiFetch<TerapijaAplikacijeDto[]>("/api/TerapijaAplikacije"),
+    list: () => apiFetch<TerapijaAplikacijeDto[]>("/TerapijaAplikacije"),
   },
   izvjestaji: {
     // 1. Generiši mjesečni izvještaj proizvodnje
     mjesecnaProizvodnja: (payload: GenerisiIzvjestajDto) =>
-      apiFetch<Blob>("/api/Izvjestaji/mjesecnaProizvodnja", {
+      apiFetch<Blob>("/Izvjestaji/mjesecnaProizvodnja", {
         method: "POST",
         body: JSON.stringify(payload),
       }),
 
     // 2. Generiši karton krave
     kartonKrave: (kravaId: number) =>
-      apiFetch<Blob>(`/api/Izvjestaji/kartonKrave/${kravaId}`, {
+      apiFetch<Blob>(`/Izvjestaji/kartonKrave/${kravaId}`, {
         method: "POST",
       }),
 
     // 3. Generiši zdravstveni izvještaj
     zdravstveniIzvjestaj: (payload: GenerisiIzvjestajDto) =>
-      apiFetch<Blob>("/api/Izvjestaji/zdravstveniIzvjestaj", {
+      apiFetch<Blob>("/Izvjestaji/zdravstveniIzvjestaj", {
         method: "POST",
         body: JSON.stringify(payload),
       }),
 
     // 4. Generiši izvještaj senzora
     izvjestajSenzora: (payload: GenerisiIzvjestajDto) =>
-      apiFetch<Blob>("/api/Izvjestaji/izvjestajSenzora", {
+      apiFetch<Blob>("/Izvjestaji/izvjestajSenzora", {
         method: "POST",
         body: JSON.stringify(payload),
       }),
