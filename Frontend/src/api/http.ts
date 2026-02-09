@@ -1,4 +1,4 @@
-
+import { BACKEND_URL } from "@/utils/api";
 export class ApiError extends Error {
   status: number;
   bodyText?: string;
@@ -32,7 +32,7 @@ export async function apiFetch<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
-  const baseUrl = getApiBaseUrl();
+  const baseUrl = BACKEND_URL;
   const normalizedPath =
     baseUrl.endsWith("/api") && path.startsWith("/api/")
       ? path.slice("/api".length)
