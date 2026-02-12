@@ -134,7 +134,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     const load = async () => {
       try {
-  
+
 
         const results = await Promise.allSettled([
           api.krave.list(),
@@ -149,10 +149,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const upozRes = results[2].status === 'fulfilled' ? results[2].value : [];
         const zadaciRes = results[3].status === 'fulfilled' ? results[3].value : [];
         const slucajeviRes = results[4].status === 'fulfilled' ? results[4].value : [];
-
-        for (const r of results) {
-          if (r.status === 'rejected') console.error('API greška:', r.reason);
-        }
 
         if (cancelled) {
           return;
@@ -226,7 +222,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setKraveDto((prev) => ({ ...prev, [String(created.idKrave)]: created }));
     };
 
-    run().catch((e) => console.error(e));
+    run()
   };
 
   const ažurirajKravu = (id: string, promjene: Partial<Krava>) => {
@@ -241,7 +237,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setKraveDto((prev) => ({ ...prev, [id]: dto }));
     };
 
-    run().catch((e) => console.error(e));
+    run()
   };
 
   const obrišiKravu = (id: string) => {
@@ -255,7 +251,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       });
     };
 
-    run().catch((e) => console.error(e));
+    run()
   };
 
   const dodajProdukciju = (produkcija: Omit<ProdukcijaMlijeka, 'id'>) => {
@@ -302,10 +298,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      
+      const backendStatus = promjene.status
+        ? mapUiStatusToBackendTask(promjene.status)
+        : base.statusZadatka;
+
       const nextDto: ZadatakDto = {
         ...base,
-        statusZadatka: promjene.status ? mapUiStatusToBackendTask(promjene.status) : base.statusZadatka,
+        statusZadatka: backendStatus,  
       };
+
 
       await api.zadaci.update(Number(id), nextDto);
 
@@ -313,7 +315,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setZadaciDto((prev) => ({ ...prev, [id]: nextDto }));
     };
 
-    run().catch((e) => console.error(e));
+    run()
   };
 
   return (

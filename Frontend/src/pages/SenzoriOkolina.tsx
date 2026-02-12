@@ -32,7 +32,7 @@ export function SenzoriOkolina() {
         setSenzori(s);
         setOcitanja(o);
       } catch (e) {
-        console.error(e);
+        return null;
       }
     };
     load();

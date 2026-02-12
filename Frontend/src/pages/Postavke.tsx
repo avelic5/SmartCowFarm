@@ -40,7 +40,7 @@ export function Postavke() {
     <div className="p-6 md:p-8 space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-slate-100">Postavke</h1>
-        <p className={`${mutedText} mt-1`}>Sistemske preferencije, obavijesti i sigurnost</p>
+        <p className={`${mutedText} mt-1`}>Sistemske preferencije, obavijesti i sigurnost (implemetacija trenutno u produkciji)</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

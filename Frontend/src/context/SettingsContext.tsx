@@ -40,7 +40,6 @@ function safeParseStoredSettings(): Partial<typeof defaultSettings> {
     const parsed = JSON.parse(raw);
     return parsed ?? {};
   } catch (err) {
-    console.warn('Failed to parse stored settings', err);
     return {};
   }
 }

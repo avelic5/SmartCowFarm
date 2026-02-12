@@ -6,7 +6,7 @@ export interface Krava {
   ime: string;
   starost: number;
   pasmina: string;
-  status: 'zdrava' | 'lijecenje' | 'praćenje';
+  status: "zdrava" | "lijecenje" | "praćenje";
   datumRodjenja: string;
   tezina: number;
   prosjecnaProdukcija: number;
@@ -24,14 +24,14 @@ export interface ProdukcijaMlijeka {
   jutro?: number;
   podne?: number;
   veče?: number;
-  kvalitet: 'odlična' | 'dobra' | 'prosječna';
+  kvalitet: "odlična" | "dobra" | "prosječna";
 }
 
 export interface ZdravstveniZapis {
   id: string;
   kravaId: string;
   datum: string;
-  tip: 'pregled' | 'liječenje' | 'vakcinacija' | 'reprodukcija';
+  tip: "pregled" | "liječenje" | "vakcinacija" | "reprodukcija";
   opis: string;
   veterinar?: string;
   dijagnoza?: string;
@@ -41,7 +41,7 @@ export interface ZdravstveniZapis {
 
 export interface Upozorenje {
   id: string;
-  tip: 'kritično' | 'upozorenje' | 'info';
+  tip: "kritično" | "upozorenje" | "info";
   naslov: string;
   poruka: string;
   datum: string;
@@ -54,8 +54,8 @@ export interface Zadatak {
   id: string;
   naslov: string;
   opis: string;
-  prioritet: 'visok' | 'srednji' | 'nizak';
-  status: 'novo' | 'u-toku' | 'završeno';
+  prioritet: "visok" | "srednji" | "nizak";
+  status: "novo" | "u-toku" | "završeno";
   rokIzvršenja: string;
   dodijeljeno?: string;
   kravaId?: string;
@@ -65,7 +65,7 @@ export interface SenzorskiPodaci {
   zona: string;
   temperatura: number;
   vlažnost: number;
-  status: 'dobro' | 'upozorenje' | 'kritično';
+  status: "dobro" | "upozorenje" | "kritično";
   poslednjeAžuriranje?: string;
 }
 
@@ -73,16 +73,33 @@ export interface Korisnik {
   id: string;
   ime: string;
   email: string;
-  uloga: 'administrator' | 'menadžer' | 'veterinar' | 'radnik';
+  uloga: "administrator" | "menadžer" | "veterinar" | "radnik";
   aktivan: boolean;
   datum_kreiranja: string;
 }
 
 export interface Izvještaj {
   id: string;
-  tip: 'proizvodnja' | 'zdravlje' | 'finansije' | 'inventar';
+  tip: "proizvodnja" | "zdravlje" | "finansije" | "inventar";
   naziv: string;
   period: string;
   kreiran: string;
   podaci?: any;
+}
+export enum RadnoMjesto {
+  Farmer,
+  Veterinar,
+  Admin,
+}
+
+export enum StatusNaloga {
+  Aktivan,
+  Neaktivan,
+  Suspendovan, // Promijenjeno iz "Pauziran" u "Suspendovan"
+}
+
+export enum Odjel {
+  Uprava = "Uprava",
+  Proizvodnja = "Proizvodnja",
+  Njega = "Njega",
 }

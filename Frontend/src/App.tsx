@@ -16,6 +16,8 @@ import { Upozorenja } from './pages/Upozorenja';
 import { Izvjestaji } from './pages/Izvjestaji';
 import { KorisniciUloge } from './pages/KorisniciUloge';
 import { Postavke } from './pages/Postavke';
+import { NoviKorisnik } from './pages/NoviKorisnik';
+import UrediKorisnika from './pages/UrediKorisnika';
 
 // Legacy navigation type used by some older components in src/components/.
 export type Page =
@@ -68,6 +70,9 @@ export default function App() {
         <Route path="upozorenja" element={<Upozorenja />} />
         <Route path="izvjestaji" element={<Izvjestaji />} />
         <Route path="korisnici-uloge" element={<KorisniciUloge />} />
+        <Route path="korisnici-uloge/novi" element={<NoviKorisnik />} />
+        <Route path="korisnici-uloge/:id/uredi" element={<UrediKorisnika />} />
+        {/*<Route path="korisnici-uloge/:id/uredi" element={<FormaKrave />} />*/}
         <Route path="postavke" element={<Postavke />} />
       </Route>
 

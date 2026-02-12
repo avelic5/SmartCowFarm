@@ -1,12 +1,18 @@
-export type StatusZdravlja = 'Aktivna' | 'Neaktivna' | 'PodNadzorom' | 'Prodana';
-export type Prioritet = 'Nizak' | 'Srednji' | 'Visok' | 'Kritican';
-export type StatusZadatka = 'Kreiran' | 'Obrada' | 'Zavrsen' | 'Otkazan';
-export type TipZadatka = string;
-export type TipUpozorenja = 'Senzor' | 'Manuelni' | 'Sistemski';
-export type NivoUpozorenja = 'Status' | 'Upozorenje' | 'Kriticno';
-export type StatusUpozorenja = 'Poslan' | 'U_Obradi' | 'Zavrsen';
+import { Odjel, RadnoMjesto, StatusNaloga } from "@/types";
 
-export type TipSenzora = 'Temperatura' | 'Pokret' | 'Protok' | 'Okruzenje';
+export type StatusZdravlja =
+  | "Aktivna"
+  | "Neaktivna"
+  | "PodNadzorom"
+  | "Prodana";
+export type Prioritet = "Nizak" | "Srednji" | "Visok" | "Kritican";
+export type StatusZadatka = "Kreiran" | "Obrada" | "Zavrsen" | "Otkazan";
+export type TipZadatka = string;
+export type TipUpozorenja = "Senzor" | "Manuelni" | "Sistemski";
+export type NivoUpozorenja = "Status" | "Upozorenje" | "Kriticno";
+export type StatusUpozorenja = "Poslan" | "U_Obradi" | "Zavrsen";
+
+export type TipSenzora = "Temperatura" | "Pokret" | "Protok" | "Okruzenje";
 export type StatusOcitavanja = string;
 
 export interface KravaDto {
@@ -191,4 +197,29 @@ export interface HealthReportData {
   slucajevi: ZdravstveniSlucajDto[];
   ukupnoSlucajeva: number;
   poStatusu: StatusCount[];
+}
+
+export interface AzurirajKorisnikaDto {
+  ime: string;
+  prezime: string;
+  email: string;
+  telefon: string;
+  radnoMjesto: RadnoMjesto;
+  odjel: Odjel;
+  datumZaposlenja: string;
+  napomene?: string;
+}
+
+export interface NoviKorisnikDto {
+  ime: string;
+  prezime: string;
+  email: string;
+  korisnickoIme: string;
+  lozinka: string;
+  telefon: string;
+  radnoMjesto: RadnoMjesto;
+  odjel: Odjel;
+  statusNaloga: StatusNaloga;
+  datumZaposlenja: string;
+  napomene?: string;
 }

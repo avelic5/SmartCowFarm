@@ -11,6 +11,8 @@ import type {
   ZadatakDto,
   ZdravstveniSlucajDto,
   GenerisiIzvjestajDto,
+  AzurirajKorisnikaDto,
+  NoviKorisnikDto,
 } from "./dto";
 
 export const api = {
@@ -52,6 +54,58 @@ export const api = {
   korisnici: {
     list: () => apiFetch<KorisnikDto[]>("/Korisnik"),
     get: (id: number) => apiFetch<KorisnikDto>(`/Korisnik/${id}`),
+    detalji: (id: number) => apiFetch<KorisnikDto>(`/Korisnik/${id}`),
+    kreiraj: (data: NoviKorisnikDto) => {
+      return apiFetch<KorisnikDto>("/Korisnik", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    azuriraj: (id: number, data: AzurirajKorisnikaDto) => {
+      return apiFetch<KorisnikDto>(`/Korisnik/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+    },
+    promjeniLozinku: (id: number, data: { novaLozinka: string }) => {
+      return apiFetch(`/Korisnik/${id}/promjeniLozinku`, {
+        method: "PUT",
+        body: JSON.stringify({
+          NovaLozinka: data.novaLozinka,
+        }),
+      });
+    },
+    obrisi: (id: number) => {
+      return apiFetch(`/Korisnik/${id}`, {
+        method: "DELETE",
+      });
+    },
+    deaktiviraj: (id: number) => {
+      return apiFetch(`/Korisnik/${id}/deaktivirajNalog`, {
+        method: "PUT",
+      });
+    },
+    aktiviraj: (id: number) => {
+      return apiFetch(`/Korisnik/${id}/aktivirajNalog`, {
+        method: "PUT",
+      });
+    },
+    suspenduj: (id: number) => {
+      return apiFetch(`/Korisnik/${id}/suspendujNalog`, {
+        method: "PUT",
+      });
+    },
+    dohvatiStatus: (id: number) => {
+      return apiFetch<{ statusNaloga: string; statusNalogaId: number }>(
+        `/Korisnik/${id}/status`,
+      );
+    },
+    azurirajKontakt: (id: number, data: { email: string; telefon: string }) => {
+      return apiFetch(`/Korisnik/${id}/azurirajKontakt`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+    },
   },
   senzori: {
     list: () => apiFetch<SenzorDto[]>("/Senzor"),

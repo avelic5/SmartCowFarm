@@ -2,7 +2,6 @@ using Backend.Controllers.Dtos;
 using Backend.Data;
 using Backend.Models;
 using Backend.Models.Enums;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -55,7 +54,7 @@ namespace Backend.Controllers
                 if (uloga != nameof(RadnoMjesto.Admin) &&
                     (!int.TryParse(trenutniKorisnikId, out int trenutniId) || trenutniId != id))
                 {
-                    return Forbid(); 
+                    return Forbid();
                 }
 
                 var trazeniKorisnik = await baza.Korisnici.FindAsync(id);
@@ -109,7 +108,7 @@ namespace Backend.Controllers
 
 
                 noviKorisnik.HashLozinke = passwordHasher.HashPassword(noviKorisnik, noviKorisnikDto.Lozinka);
-                
+
                 if (noviKorisnik.StatusNaloga == 0)
                     noviKorisnik.StatusNaloga = StatusNaloga.Aktivan;
 
@@ -127,7 +126,7 @@ namespace Backend.Controllers
             }
         }
 
-    
+
         [HttpPut("{id}")]
         ////[Authorize]
         public async Task<ActionResult> UpdateKorisnika(int id, [FromBody] AzurirajKorisnikaDto noviPodaci)
@@ -137,15 +136,14 @@ namespace Backend.Controllers
                 if (noviPodaci == null)
                     return BadRequest(new { Poruka = "Podaci su obavezni" });
 
-                // Dobij trenutnog korisnika iz tokena
                 var trenutniKorisnikId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 var uloga = User.FindFirstValue(ClaimTypes.Role);
 
-                // Provjeri prava pristupa
+        
                 if (uloga != nameof(RadnoMjesto.Admin) &&
                     (!int.TryParse(trenutniKorisnikId, out int trenutniId) || trenutniId != id))
                 {
-                    return Forbid(); // Ne možeš mijenjati tuđi profil
+                    return Forbid();
                 }
 
                 var trazeniKorisnik = await baza.Korisnici.FindAsync(id);
@@ -154,8 +152,11 @@ namespace Backend.Controllers
 
                 trazeniKorisnik.Ime = noviPodaci.Ime ?? trazeniKorisnik.Ime;
                 trazeniKorisnik.Prezime = noviPodaci.Prezime ?? trazeniKorisnik.Prezime;
+                trazeniKorisnik.Email = noviPodaci.Email ?? trazeniKorisnik.Email;
                 trazeniKorisnik.Odjel = Enum.TryParse<Odjel>(noviPodaci.Odjel, out var odjel) ? odjel : Odjel.Proizvodnja;
                 trazeniKorisnik.Telefon = noviPodaci.Telefon ?? trazeniKorisnik.Telefon;
+                trazeniKorisnik.Napomene = noviPodaci.Napomene ?? trazeniKorisnik.Napomene;
+                
 
 
                 // Samo admin može mijenjati radno mjesto i datum zaposlenja
@@ -429,13 +430,53 @@ namespace Backend.Controllers
             }
         }
 
-        // Odjava
-        [HttpPost("odjava")]
-        //[Authorize]
-        public IActionResult Odjava()
+        // Suspenduj nalog (samo admin)
+        [HttpPut("{id}/suspendujNalog")]
+        public async Task<ActionResult> SuspendujNalog(int id)
         {
-            return Ok(new { Poruka = "Odjava uspješna" });
+            try
+            {
+                var trazeniKorisnik = await baza.Korisnici.FindAsync(id);
+                if (trazeniKorisnik == null)
+                {
+                    return NotFound(new { Poruka = "Korisnik nije pronadjen" });
+                }
+
+                trazeniKorisnik.StatusNaloga = StatusNaloga.Suspendovan;
+                await baza.SaveChangesAsync();
+
+                return Ok(new { Poruka = "Nalog uspješno suspendovan" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Poruka = "Greska sa spremanjem u bazu", Greska = ex.Message });
+            }
         }
+
+        // Dohvati status korisnika (opciono, ali korisno)
+        [HttpGet("{id}/status")]
+        public async Task<ActionResult> DohvatiStatus(int id)
+        {
+            try
+            {
+                var trazeniKorisnik = await baza.Korisnici.FindAsync(id);
+                if (trazeniKorisnik == null)
+                {
+                    return NotFound(new { Poruka = "Korisnik nije pronadjen" });
+                }
+
+                return Ok(new
+                {
+                    StatusNaloga = trazeniKorisnik.StatusNaloga.ToString(),
+                    StatusNalogaId = (int)trazeniKorisnik.StatusNaloga
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Poruka = "Greska sa bazom", Greska = ex.Message });
+            }
+        }
+
 
         // Refresh token
         [HttpPost("refresh")]

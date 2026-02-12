@@ -35,7 +35,7 @@ export function ZdravljeReprodukcija() {
         setAplikacije(a);
         setKorisnici(k);
       } catch (e) {
-        console.error(e);
+        return;
       }
     };
     load();
