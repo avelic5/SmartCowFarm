@@ -27,10 +27,7 @@
                 options.AddPolicy("AllowReact",
                     policy =>
                     {
-                        policy.WithOrigins("http://localhost:3000",
-                        "http://localhost:5000",
-                        "https://smart-cow-farm.vercel.app" 
-                        )
+                        policy.WithOrigins("http://localhost:3000")
                             .AllowAnyMethod()
                             .AllowAnyHeader()
                             .AllowCredentials()
